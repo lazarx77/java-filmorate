@@ -19,7 +19,7 @@ import java.util.Map;
 @Slf4j
 public class FilmController {
 
-    private final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
+    private final static LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
     Map<Long, Film> films = new HashMap<>();
 

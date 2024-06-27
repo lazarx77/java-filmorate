@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @EqualsAndHashCode(of = {"name", "releaseDate"})
 public class Film {
 
-    private final int DESCRIPTION_MAX_LENGTH = 200;
+    private final static int DESCRIPTION_MAX_LENGTH = 200;
     private Long id;
     @NotBlank(message = "Название не может быть пустым")
     private String name;
