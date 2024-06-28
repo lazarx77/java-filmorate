@@ -25,15 +25,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 class FilmControllerTests {
     private Film film;
-    private static Validator validator;
+    private Validator validator;
 
-    @BeforeAll
-    public static void init() {
-        validator = Validation.buildDefaultValidatorFactory().getValidator();
-    }
 
     @BeforeEach
     public void beforeEach() {
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
         film = new Film();
         film.setName("name");
         film.setDescription("description");

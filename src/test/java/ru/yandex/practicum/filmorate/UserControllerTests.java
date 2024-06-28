@@ -23,15 +23,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 class UserControllerTests {
     private User user;
-    private static Validator validator;
-
-    @BeforeAll
-    public static void init() {
-        validator = Validation.buildDefaultValidatorFactory().getValidator();
-    }
+    private Validator validator;
 
     @BeforeEach
     public void beforeEach() {
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
         user = new User("nikname@bk.ru", "login", "name",
                 LocalDate.of(2000, 1, 1));
     }

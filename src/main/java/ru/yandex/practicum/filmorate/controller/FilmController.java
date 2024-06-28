@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -19,16 +20,14 @@ import java.util.Map;
 @Slf4j
 public class FilmController {
 
-    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
-    Map<Long, Film> films = new HashMap<>();
+    private static final Map<Long, Film> films = new HashMap<>();
 
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film film) {
         // проверяем выполнение необходимых условий
-        if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
-            throw new ValidationException("Дата релиза не может быть раньше дня рождения Кино");
-        }
+        log.info("Проверка даты выпуска фильма при добавлении в картотеку: {}.", film.getName());
+        FilmValidator.validateReleaseDate(film);
 
         // формируем дополнительные данные
         film.setId(getNextId());
@@ -45,40 +44,21 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@RequestBody Film updatedFilm) {
+    public Film update(@Valid @RequestBody Film updatedFilm) {
         // проверяем необходимые условия
-        if (updatedFilm.getId() == null) {
-            throw new ValidationException("Id должен быть указан");
-        }
-        if (films.containsKey(updatedFilm.getId())) {
-            Film oldFilm = films.get(updatedFilm.getId());
-            films.remove(updatedFilm.getId());
+        log.info("Проверка налиячия Id у фильма при обновлении: {}.", updatedFilm.getName());
+        FilmValidator.validateId(updatedFilm);
 
-            for (Long id : films.keySet()) {
-                Film middleFilm = films.get(id);
-                if (updatedFilm.getName().equals(middleFilm.getName()) && updatedFilm.getReleaseDate().equals(middleFilm.getReleaseDate())) {
-                    films.put(updatedFilm.getId(), oldFilm);
-                    throw new ValidationException("Этот фильм уже есть картотеке");
-                }
-            }
-            if (updatedFilm.getName() == null) {
-                updatedFilm.setName(oldFilm.getName());
-            }
-            if (updatedFilm.getReleaseDate() == null) {
-                updatedFilm.setReleaseDate(oldFilm.getReleaseDate());
-            }
-            if (updatedFilm.getDescription() == null) {
-                updatedFilm.setDuration(oldFilm.getDuration());
-            }
-            if (updatedFilm.getDuration() == null) {
-                updatedFilm.setDuration(oldFilm.getDuration());
-            }
-            films.put(updatedFilm.getId(), updatedFilm);
-            log.info("Пользователь обновил данные по фильму в картотеке: {}, дата выпуска - {}.",
-                    updatedFilm.getName(), updatedFilm.getReleaseDate());
-        } else {
-            throw new ValidationException("Фильм с id = " + updatedFilm.getId() + " не найден");
-        }
+        log.info("Проверка даты выпуска фильма при обновлении: {}.", updatedFilm.getName());
+        FilmValidator.validateReleaseDate(updatedFilm);
+
+        log.info("Проверка полей фильма при обновлении: {}.", updatedFilm.getName());
+        FilmValidator.validateUpdateFields(updatedFilm, films);
+
+        films.put(updatedFilm.getId(), updatedFilm);
+        log.info("Пользователь обновил данные по фильму в картотеке: {}, дата выпуска - {}.",
+                updatedFilm.getName(), updatedFilm.getReleaseDate());
+
         return films.get(updatedFilm.getId());
     }
 
@@ -90,5 +70,59 @@ public class FilmController {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
+    }
+}
+
+/**
+ * FilmValidator, утилитарный класс для валидации полей фильмов.
+ */
+@Slf4j
+final class FilmValidator {
+
+    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
+
+    static void validateReleaseDate(Film film) {
+        if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
+            throw new ValidationException("Дата релиза не может быть раньше дня рождения Кино");
+        }
+    }
+
+    static void validateId(Film film) {
+        if (film.getId() == null) {
+            throw new ValidationException("Id должен быть указан");
+        }
+    }
+
+    static void validateUpdateFields(Film updatedFilm, Map<Long, Film> films) {
+
+        if (!films.containsKey(updatedFilm.getId())) {
+            throw new ValidationException("Фильм с id = " + updatedFilm.getId() + " не найден");
+        }
+
+        //проверяем на дубликат фильма при обновлении
+        if (!updatedFilm.equals(films.get(updatedFilm.getId()))) { //@EqualsAndHashCode(of = {"name", "releaseDate"})
+            for (Long id : films.keySet()) {
+                Film middleFilm = films.get(id);
+                if (updatedFilm.equals(middleFilm)) {
+                    throw new ValidationException("Этот фильм уже есть в картотеке: " + middleFilm.getName() +
+                            ", дата выпуска - " + middleFilm.getReleaseDate() + ".");
+                }
+            }
+        }
+
+        Film oldFilm = films.get(updatedFilm.getId());
+
+        if (updatedFilm.getName() == null) {
+            updatedFilm.setName(oldFilm.getName());
+        }
+        if (updatedFilm.getReleaseDate() == null) {
+            updatedFilm.setReleaseDate(oldFilm.getReleaseDate());
+        }
+        if (updatedFilm.getDescription() == null) {
+            updatedFilm.setDuration(oldFilm.getDuration());
+        }
+        if (updatedFilm.getDuration() == null) {
+            updatedFilm.setDuration(oldFilm.getDuration());
+        }
     }
 }
