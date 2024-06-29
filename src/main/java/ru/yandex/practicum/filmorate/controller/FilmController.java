@@ -69,58 +69,59 @@ public class FilmController {
                 .orElse(0);
         return ++currentMaxId;
     }
-}
 
-/**
- * FilmValidator, утилитарный класс для валидации полей фильмов.
- */
-@Slf4j
-final class FilmValidator {
+    /**
+     * FilmValidator, утилитарный класс для валидации полей фильмов.
+     */
+    static final class FilmValidator {
 
-    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
+        private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
-    static void validateReleaseDate(Film film) {
-        if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
-            throw new ValidationException("Дата релиза не может быть раньше дня рождения Кино");
-        }
-    }
-
-    static void validateId(Film film) {
-        if (film.getId() == null) {
-            throw new ValidationException("Id должен быть указан");
-        }
-    }
-
-    static void validateUpdateFields(Film updatedFilm, Map<Long, Film> films) {
-
-        if (!films.containsKey(updatedFilm.getId())) {
-            throw new ValidationException("Фильм с id = " + updatedFilm.getId() + " не найден");
-        }
-
-        //проверяем на дубликат фильма при обновлении
-        if (!updatedFilm.equals(films.get(updatedFilm.getId()))) { //@EqualsAndHashCode(of = {"name", "releaseDate"})
-            for (Long id : films.keySet()) {
-                Film middleFilm = films.get(id);
-                if (updatedFilm.equals(middleFilm)) {
-                    throw new ValidationException("Этот фильм уже есть в картотеке: " + middleFilm.getName() +
-                            ", дата выпуска - " + middleFilm.getReleaseDate() + ".");
-                }
+        static void validateReleaseDate(Film film) {
+            if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
+                throw new ValidationException("Дата релиза не может быть раньше дня рождения Кино");
             }
         }
 
-        Film oldFilm = films.get(updatedFilm.getId());
+        static void validateId(Film film) {
+            if (film.getId() == null) {
+                throw new ValidationException("Id должен быть указан");
+            }
+        }
 
-        if (updatedFilm.getName() == null) {
-            updatedFilm.setName(oldFilm.getName());
-        }
-        if (updatedFilm.getReleaseDate() == null) {
-            updatedFilm.setReleaseDate(oldFilm.getReleaseDate());
-        }
-        if (updatedFilm.getDescription() == null) {
-            updatedFilm.setDuration(oldFilm.getDuration());
-        }
-        if (updatedFilm.getDuration() == null) {
-            updatedFilm.setDuration(oldFilm.getDuration());
+        static void validateUpdateFields(Film updatedFilm, Map<Long, Film> films) {
+
+            if (!films.containsKey(updatedFilm.getId())) {
+                throw new ValidationException("Фильм с id = " + updatedFilm.getId() + " не найден");
+            }
+
+            //проверяем на дубликат фильма при обновлении
+            if (!updatedFilm.equals(films.get(updatedFilm.getId()))) { //@EqualsAndHashCode(of = {"name", "releaseDate"})
+                for (Long id : films.keySet()) {
+                    Film middleFilm = films.get(id);
+                    if (updatedFilm.equals(middleFilm)) {
+                        throw new ValidationException("Этот фильм уже есть в картотеке: " + middleFilm.getName() +
+                                ", дата выпуска - " + middleFilm.getReleaseDate() + ".");
+                    }
+                }
+            }
+
+            Film oldFilm = films.get(updatedFilm.getId());
+
+            if (updatedFilm.getName() == null) {
+                updatedFilm.setName(oldFilm.getName());
+            }
+            if (updatedFilm.getReleaseDate() == null) {
+                updatedFilm.setReleaseDate(oldFilm.getReleaseDate());
+            }
+            if (updatedFilm.getDescription() == null) {
+                updatedFilm.setDuration(oldFilm.getDuration());
+            }
+            if (updatedFilm.getDuration() == null) {
+                updatedFilm.setDuration(oldFilm.getDuration());
+            }
         }
     }
 }
+
+
