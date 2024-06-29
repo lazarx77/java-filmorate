@@ -51,7 +51,7 @@ public class FilmController {
         FilmValidator.validateReleaseDate(updatedFilm);
 
         log.info("Проверка полей фильма при обновлении: {}.", updatedFilm.getName());
-        FilmValidator.validateUpdateFields(updatedFilm, films);
+        FilmValidator.validateUpdateFields(updatedFilm);
 
         films.put(updatedFilm.getId(), updatedFilm);
         log.info("Пользователь обновил данные по фильму в картотеке: {}, дата выпуска - {}.",
@@ -89,7 +89,7 @@ public class FilmController {
             }
         }
 
-        static void validateUpdateFields(Film updatedFilm, Map<Long, Film> films) {
+        static void validateUpdateFields(Film updatedFilm) {
 
             if (!films.containsKey(updatedFilm.getId())) {
                 throw new ValidationException("Фильм с id = " + updatedFilm.getId() + " не найден");

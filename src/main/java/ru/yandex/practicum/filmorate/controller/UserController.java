@@ -30,7 +30,7 @@ public class UserController {
     public User createUser(@Valid @RequestBody User user) {
 
         log.info("проверка email на дубликат пользователя при его добавлении: {}", user.getLogin());
-        UserValidator.emailDoubleValidator(user, users);
+        UserValidator.emailDoubleValidator(user);
 
         // формируем дополнительные данные
         if (user.getName() == null) {
@@ -54,7 +54,7 @@ public class UserController {
         UserValidator.validateId(updatedUser);
 
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
-        UserValidator.validateUpdateFields(updatedUser, users);
+        UserValidator.validateUpdateFields(updatedUser);
 
         users.put(updatedUser.getId(), updatedUser);
         log.info("Пользователя с именем: {} обновлены.", updatedUser.getName());
@@ -79,7 +79,7 @@ public class UserController {
 
         private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
-        static void emailDoubleValidator(User user, Map<Long, User> users) {
+        static void emailDoubleValidator(User user) {
             for (Long id : users.keySet()) {
                 User middleUser = users.get(id);
                 if (user.getEmail().equals(middleUser.getEmail())) {
@@ -94,7 +94,7 @@ public class UserController {
             }
         }
 
-        static void validateUpdateFields(User updatedUser, Map<Long, User> users) {
+        static void validateUpdateFields(User updatedUser) {
 
             if (!users.containsKey(updatedUser.getId())) {
                 throw new ValidationException("Польователь с id = " + updatedUser.getId() + " не найден");
