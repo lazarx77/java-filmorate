@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 /**
  * User.
@@ -14,6 +15,8 @@ import java.time.LocalDate;
 public class User {
 
     private Long id;
+    private Set<Long> friends;
+
     @NotEmpty(message = "Электронная почта не может быть пустой")
     @NotNull(message = "Электронная почта не может быть Null")
     @Email(message = "Электронная почта должна быть пустой и должна соответствовать формату электронной почты")

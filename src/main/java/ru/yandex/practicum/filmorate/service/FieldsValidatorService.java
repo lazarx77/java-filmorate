@@ -9,10 +9,10 @@ import java.time.LocalDate;
 import java.util.Map;
 
 /**
- * FieldsValidator, класс для валидации полей.
+ * FieldsValidatorService, класс для валидации полей.
  */
 @Slf4j
-public class FieldsValidator {
+public class FieldsValidatorService {
 
     private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 

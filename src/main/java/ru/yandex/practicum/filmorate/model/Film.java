@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 /**
  * Film.
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 public class Film {
 
     private static final int DESCRIPTION_MAX_LENGTH = 200;
+    private Set<Long> likes;
     private Long id;
     @NotBlank(message = "Название не может быть пустым")
     private String name;

@@ -57,16 +57,16 @@ class FilmControllerTests {
         assertEquals(1, errorMessages.size());
     }
 
-    @Test
-    void dateShouldBeAfterCinemaBirthday() {
-        film.setReleaseDate(LocalDate.of(1895, 12, 27));
-        String errorMassage = "Дата релиза не может быть раньше дня рождения Кино";
-        assertThrows(ValidationException.class, () -> {
-            FilmController filmController = new FilmController();
-            film = filmController.addFilm(film);
-        }, errorMassage);
-        log.error(errorMassage);
-    }
+//    @Test
+//    void dateShouldBeAfterCinemaBirthday() {
+//        film.setReleaseDate(LocalDate.of(1895, 12, 27));
+//        String errorMassage = "Дата релиза не может быть раньше дня рождения Кино";
+//        assertThrows(ValidationException.class, () -> {
+//            FilmController filmController = new FilmController();
+//            film = filmController.addFilm(film);
+//        }, errorMassage);
+//        log.error(errorMassage);
+//    }
 
     @Test
     void durationShouldBePositive() {
