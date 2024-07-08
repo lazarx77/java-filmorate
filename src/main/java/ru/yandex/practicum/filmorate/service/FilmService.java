@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -17,32 +19,34 @@ import java.util.Collections.*;
  * FilmService.
  */
 @Service
+@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage filmStorage;
-    private final static int MOST_LIKED_SIZE =10;
 
-    public FilmService(FilmStorage filmStorage) {
-        this.filmStorage = filmStorage;
+    public void addLike(Long filmId, Long userId) {
+        filmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"))
+                .getLikes()
+                .add(userId);
     }
 
-    public void addLike(Film film, User user) {
-        film.getLikes().add(user.getId());
-    }
+    public void deleteLike(Long filmId, Long userId) {
+        Film film = filmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
 
-    public void deleteLike(Film film, User user) {
-        if (!film.getLikes().contains(user.getId())) {
-            throw new NotFoundException("У фильма " + film.getName() + " нет лайка от пользователя " + user.getId());
+        if (!film.getLikes().contains(userId)) {
+            throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
         }
-        film.getLikes().remove(user.getId());
+        film.getLikes().remove(userId);
     }
 
-    public List<Film> getMostLiked() {
+    public List<Film> getMostLiked(int count) {
         Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
         return filmStorage.getAll()
                 .stream()
                 .sorted(comparator)
-                .limit(MOST_LIKED_SIZE)
+                .limit(count)
                 .collect(Collectors.toList());
     }
 }

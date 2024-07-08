@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Set;
 public class User {
 
     private Long id;
-    private Set<Long> friends;
+    private Set<Long> friends = new HashSet<>();
 
     @NotEmpty(message = "Электронная почта не может быть пустой")
     @NotNull(message = "Электронная почта не может быть Null")

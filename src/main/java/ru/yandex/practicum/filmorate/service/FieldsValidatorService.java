@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -31,7 +32,7 @@ public class FieldsValidatorService {
     public static void validateUpdateFilmFields(Film updatedFilm, Map<Long, Film> films) {
 
         if (!films.containsKey(updatedFilm.getId())) {
-            throw new ValidationException("Фильм с id = " + updatedFilm.getId() + " не найден");
+            throw new NotFoundException("Фильм с id = " + updatedFilm.getId() + " не найден");
         }
 
         //проверяем на дубликат фильма при обновлении
@@ -80,7 +81,7 @@ public class FieldsValidatorService {
     public static void validateUpdateUserFields(User updatedUser, Map<Long, User> users) {
 
         if (!users.containsKey(updatedUser.getId())) {
-            throw new ValidationException("Польователь с id = " + updatedUser.getId() + " не найден");
+            throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
         }
 
         //проверка на дубликат email при обновлении пользователей

@@ -16,4 +16,5 @@ public interface UserStorage {
 
     User update(User updatedUser);
     Optional<User> findById(Long id);
+//    void setFriends(Long userId, Long friendId);
 }

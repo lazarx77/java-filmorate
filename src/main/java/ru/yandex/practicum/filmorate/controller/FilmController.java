@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -19,22 +20,31 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
     private final FilmStorage filmStorage;
     private final FilmService filmService;
-    private static final Map<Long, Film> films = new HashMap<>();
 
-    @Autowired
-    public FilmController(FilmStorage filmStorage, FilmService filmService) {
-        this.filmStorage = filmStorage;
-        this.filmService = filmService;
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable("id") long id, @PathVariable("userId") long userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void deleteLike(@PathVariable("id") long id, @PathVariable("userId") long userId) {
+        filmService.deleteLike(id, userId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@Valid @RequestBody Film film) {
         return filmStorage.addFilm(film);
+    }
+
+    @GetMapping("/popular?count={count}")
+    public List<Film> getPopular(@PathVariable("count") @RequestParam(defaultValue = "10") int count) {
+        return filmService.getMostLiked(count);
     }
 
     @GetMapping
@@ -45,16 +55,5 @@ public class FilmController {
     @PutMapping
     public Film update(@Valid @RequestBody Film updatedFilm) {
         return filmStorage.update(updatedFilm);
-    }
-
-    @GetMapping
-    public List<Film> getMostLiked(){
-        return filmService.getMostLiked();
-    }
-
-    @PutMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void addLike(Film film, User user){
-
     }
 }

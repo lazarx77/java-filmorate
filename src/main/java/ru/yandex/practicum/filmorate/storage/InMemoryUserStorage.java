@@ -58,6 +58,17 @@ public class InMemoryUserStorage implements UserStorage {
         return users.get(updatedUser.getId());
     }
 
+//    @Override
+//    public void setFriends(Long userId, Long friendId) {
+//        if (users.get(userId).getFriends() == null) {
+//            users.get(userId).setFriends(new HashSet<>());
+//        }
+//        users.get(userId).getFriends().add(friendId);
+//        users.get(userId);
+//    }
+//        return user;
+//    }
+
     //метод для нахождения пользователя по id
     @Override
     public Optional<User> findById(Long id) {
