@@ -46,11 +46,17 @@ public class InMemoryUserStorage implements UserStorage {
     public User update(User updatedUser) {
         // проверяем необходимые условия
 
-        log.info("Проверка наличия Id пользователя в запросе: {}.", updatedUser.getLogin());
+        log.info("Проверка наличия id пользователя в запросе: {}.", updatedUser.getLogin());
         FieldsValidatorService.validateUserId(updatedUser);
 
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
         FieldsValidatorService.validateUpdateUserFields(updatedUser, users);
+
+        if (updatedUser.getFriends() != null) {
+//            log.info("Проверка полей друзей пользователя при его обновлении; {}", updatedUser.getLogin());
+//            FieldsValidatorService.validateUpdateFriendsFields(updatedUser, users);
+
+        }
 
         users.put(updatedUser.getId(), updatedUser);
         log.info("Пользователя с именем: {} обновлены.", updatedUser.getName());
