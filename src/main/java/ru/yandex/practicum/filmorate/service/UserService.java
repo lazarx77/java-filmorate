@@ -36,32 +36,48 @@ public class UserService {
     //todo: fix this
     public List<User> getCommonFriends(Long userId, Long otherId) {
 
-        List<User> userFriendsList = getUserFriends(userId);
-        List<User> otherFriendsList = getUserFriends(otherId);
-        List<User> commonFriendsList = new ArrayList<>();
-
-        for (User user : userFriendsList) {
-            if (user.getFriends().contains(otherId)) {
-                userFriendsList.add(user);
-            }
-        }
-
-
-//        if (userFriendsList.stream().noneMatch(user -> user.getId().equals(otherId))) {
-//            throw new NotFoundException("Пользователь с id " + otherId + " не является друзьями пользователя с id " + userId);
+//        List<User> userFriendsList = getUserFriends(userId);
+//        List<User> otherFriendsList = getUserFriends(otherId);
+//        List<User> commonFriendsList = new ArrayList<>();
+//
+//        for (User user : userFriendsList) {
+//            for(User otherUser : otherFriendsList) {
+//                if (user.getFriends().contains(otherUser.getFriends())) {
+//                    commonFriendsList.add(user);
+//                }
+//            }
+////            if (user.getFriends().contains(otherId)) {
+////                userFriendsList.add(user);
+////            }
 //        }
-
-
+//
+//
+////        if (userFriendsList.stream().noneMatch(user -> user.getId().equals(otherId))) {
+////            throw new NotFoundException("Пользователь с id " + otherId + " не является друзьями пользователя с id " + userId);
+////        }
+//
+//
         Set<Long> userFriendsSet = new HashSet<>(userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден")).getFriends());
         Set<Long> otherUserFriendsSet = new HashSet<>(userStorage.findById(otherId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + otherId + " не найден")).getFriends());
+        Set<Long> common = new HashSet<>(userFriendsSet);
+        for (Long friendId : userFriendsSet) {
+            if (otherUserFriendsSet.contains(friendId)) {
+                common.add(friendId);
+            }
+        }
+        List<User> commonFriendsList = new ArrayList<>();
+        for (Long id : common) {
+            commonFriendsList.add(userStorage.findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден")));
+        }
+
+        //Set<Long> common = userFriendsSet.retainAll(otherUserFriendsSet);
 
 
-        userFriendsSet.retainAll(otherUserFriendsSet);
 
-
-        return null; //new ArrayList<>(userFriendsSet);
+        return commonFriendsList;
+                //commonFriendsList; //new ArrayList<>(userFriendsSet);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
