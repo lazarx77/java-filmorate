@@ -3,10 +3,12 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * InMemoryFilmStorage.
@@ -70,15 +72,4 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .orElse(0);
         return ++currentMaxId;
     }
-
-//    @Override
-//    public List<Film> getLikes(){
-//        List<Film> likes = new ArrayList<>();
-//        for (Film film : films.values()) {
-//            if (!film.getLikes().isEmpty()) {
-//                likes.add(film);
-//            }
-//        }
-//        return likes;
-//    }
 }

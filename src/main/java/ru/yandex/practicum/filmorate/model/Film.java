@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -15,7 +18,7 @@ import java.util.Set;
 public class Film {
 
     private static final int DESCRIPTION_MAX_LENGTH = 200;
-    private Set<Long> likes;
+    private Set<Long> likes = new HashSet<>();
     private Long id;
     @NotBlank(message = "Название не может быть пустым")
     private String name;

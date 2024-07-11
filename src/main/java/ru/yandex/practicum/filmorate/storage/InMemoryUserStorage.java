@@ -16,7 +16,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     private static final Map<Long, User> users = new HashMap<>();
 
-
     @Override
     public Collection<User> getAll() {
         return users.values();
@@ -52,28 +51,11 @@ public class InMemoryUserStorage implements UserStorage {
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
         FieldsValidatorService.validateUpdateUserFields(updatedUser, users);
 
-        if (updatedUser.getFriends() != null) {
-//            log.info("Проверка полей друзей пользователя при его обновлении; {}", updatedUser.getLogin());
-//            FieldsValidatorService.validateUpdateFriendsFields(updatedUser, users);
-
-        }
-
         users.put(updatedUser.getId(), updatedUser);
         log.info("Пользователя с именем: {} обновлены.", updatedUser.getName());
 
         return users.get(updatedUser.getId());
     }
-
-//    @Override
-//    public void setFriends(Long userId, Long friendId) {
-//        if (users.get(userId).getFriends() == null) {
-//            users.get(userId).setFriends(new HashSet<>());
-//        }
-//        users.get(userId).getFriends().add(friendId);
-//        users.get(userId);
-//    }
-//        return user;
-//    }
 
     //метод для нахождения пользователя по id
     @Override
