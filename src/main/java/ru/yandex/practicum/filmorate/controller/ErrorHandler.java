@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,19 +32,6 @@ public class ErrorHandler {
         log.error("Ошибка с входными параметрами: {}.", e.getMessage());
         return Map.of(
                 "error", "Ошибка с входными параметрами.",
-                "description", e.getMessage()
-        );
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handleUnexpectedException(final Throwable e) {
-        if (e instanceof MethodArgumentNotValidException) {
-            return handleValidationException((ValidationException) e);
-        }
-        log.error("Возникло исключение: {}.", e.getMessage());
-        return Map.of(
-                "error", "Возникло исключение",
                 "description", e.getMessage()
         );
     }

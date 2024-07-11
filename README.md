@@ -1,2 +1,2 @@
 # java-filmorate
-Filmorate project by O.Lazarenko. Sprint 10.
+Filmorate project by O.Lazarenko. Sprint 11.
