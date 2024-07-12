@@ -7,29 +7,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * FilmControllerTests.
+ * FilmControllerTests - класс для тестирования контроллера фильмов.
  */
 @SpringBootTest
 @Slf4j
@@ -74,15 +68,15 @@ class FilmControllerTests {
 
     @Test
     void dateShouldBeAfterCinemaBirthday() {
-    film.setReleaseDate(LocalDate.of(1895, 12, 27));
-    String errorMassage = "Дата релиза не может быть раньше дня рождения Кино";
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
+        String errorMassage = "Дата релиза не может быть раньше дня рождения Кино";
 
-    try {
-        filmController.addFilm(film);
-    } catch (ValidationException e) {
-        log.error(errorMassage);
+        try {
+            filmController.addFilm(film);
+        } catch (ValidationException e) {
+            log.error(errorMassage);
+        }
     }
-}
 
     @Test
     void durationShouldBePositive() {

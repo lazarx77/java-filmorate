@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * FilmorateApplicationTests.
+ * FilmorateApplicationTests класс для тестирования приложения фильмов.
  */
 @SpringBootTest
 class FilmorateApplicationTests {
