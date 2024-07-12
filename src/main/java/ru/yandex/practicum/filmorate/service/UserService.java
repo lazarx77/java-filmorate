@@ -24,7 +24,8 @@ public class UserService {
     private final UserStorage userStorage;
 
     /**
-     * addFriend - добавляет пользователя с идентификатором friendId в список друзей пользователя с идентификатором userId.
+     * addFriend - добавляет пользователя с идентификатором friendId в список друзей пользователя с
+     * идентификатором userId.
      *
      * @param userId   идентификатор пользователя
      * @param friendId идентификатор друга, которого нужно добавить

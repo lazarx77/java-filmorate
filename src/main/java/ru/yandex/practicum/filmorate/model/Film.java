@@ -28,7 +28,8 @@ public class Film {
     private Long id;
     @NotBlank(message = "Название не может быть пустым")
     private String name;
-    @Size(max = DESCRIPTION_MAX_LENGTH, message = "Максимальная длина описания — " + DESCRIPTION_MAX_LENGTH + " символов")
+    @Size(max = DESCRIPTION_MAX_LENGTH, message = "Максимальная длина описания — "
+            + DESCRIPTION_MAX_LENGTH + " символов")
     private String description;
     private LocalDate releaseDate;
     @Positive(message = "Продолжительность не может быть отрицательной")
