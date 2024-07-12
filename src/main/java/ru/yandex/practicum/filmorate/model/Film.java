@@ -9,9 +9,15 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-
 /**
  * Film.
+ * Фильм хранит поля:
+ * - id: уникальный идентификатор фильма
+ * - name: название фильма, не может быть пустым
+ * - description: описание фильма, максимальная длина 200 символов
+ * - releaseDate: дата выхода фильма
+ * - duration: продолжительность фильма в минутах, не может быть отрицательной
+ * - likes: множество идентификаторов пользователей, которым понравился фильм
  */
 @Data
 @EqualsAndHashCode(of = {"name", "releaseDate"})

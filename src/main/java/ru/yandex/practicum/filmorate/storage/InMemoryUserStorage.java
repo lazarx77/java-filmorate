@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * InMemoryUserStorage.
+ * Класс InMemoryUserStorage реализует интерфейс UserStorage и предоставляет методы для работы с пользователями в памяти приложения.
+ * Он хранит пользователей в HashMap и позволяет создавать, обновлять и получать пользователей из памяти.
  */
 @Component
 @Slf4j
@@ -24,30 +25,28 @@ public class InMemoryUserStorage implements UserStorage {
         return users.values();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public User createUser(User user) {
-
         log.info("проверка email на дубликат пользователя при его добавлении: {}", user.getLogin());
         FieldsValidatorService.emailDoubleValidator(user, users);
-
-        // формируем дополнительные данные
         if (user.getName() == null) {
             user.setName(user.getLogin());
         }
-
         user.setId(getNextId());
-
-        // сохраняем нового пользователя в памяти приложения
         users.put(user.getId(), user);
         log.info("Пользователь с именем: {} был добавлен в картотеку.", user.getName());
 
         return users.get(user.getId());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public User update(User updatedUser) {
-        // проверяем необходимые условия
-
         log.info("Проверка наличия id пользователя в запросе: {}.", updatedUser.getLogin());
         FieldsValidatorService.validateUserId(updatedUser);
 
@@ -60,7 +59,9 @@ public class InMemoryUserStorage implements UserStorage {
         return users.get(updatedUser.getId());
     }
 
-    //метод для нахождения пользователя по id
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Optional<User> findById(Long id) {
         return users.values().stream().filter(u -> u.getId().equals(id)).findAny();

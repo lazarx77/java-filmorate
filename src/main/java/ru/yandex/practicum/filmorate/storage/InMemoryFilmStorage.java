@@ -11,7 +11,10 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * InMemoryFilmStorage.
+ * Класс InMemoryFilmStorage реализует интерфейс FilmStorage и предоставляет методы для работы с фильмами в памяти приложения.
+ * Фильмы хранятся в HashMap, где ключом является идентификатор фильма, а значением - объект Film.
+ * Класс предоставляет методы для добавления новых фильмов, получения всех фильмов, обновления существующих фильмов.
+ * При добавлении и обновлении фильмов выполняется проверка корректности данных с помощью сервиса FieldsValidatorService.
  */
 @Component
 @Slf4j
@@ -19,29 +22,33 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private static final Map<Long, Film> films = new HashMap<>();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Film addFilm(Film film) {
-        // проверяем выполнение необходимых условий
         log.info("Проверка даты выпуска фильма при добавлении в картотеку: {}.", film.getName());
         FieldsValidatorService.validateReleaseDate(film);
-
-        // формируем дополнительные данные
         film.setId(getNextId());
-        // сохраняем новый фильм в памяти приложения
         films.put(film.getId(), film);
         log.info("Пользователь добавил фильм в картотеку: {}, дата выпуска - {}.", film.getName(),
                 film.getReleaseDate());
         return films.get(film.getId());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Collection<Film> getAll() {
         return films.values();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Film update(Film updatedFilm) {
-        // проверяем необходимые условия
         log.info("Проверка налиячия Id у фильма при обновлении: {}.", updatedFilm.getName());
         FieldsValidatorService.validateFilmId(updatedFilm);
 
@@ -58,6 +65,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.get(updatedFilm.getId());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Optional<Film> findById(Long id) {
         return films.values().stream().filter(p -> p.getId().equals(id)).findAny();

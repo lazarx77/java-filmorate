@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * FilmService.
+ * FilmService - сервис для работы с фильмами.
+ * Позволяет добавлять и удалять лайки к фильмам, а также получать список самых популярных фильмов.
  */
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,13 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
+    /**
+     * addLike - добавляет лайк пользователя к фильму.
+     *
+     * @param filmId идентификатор фильма, к которому добавляется лайк.
+     * @param userId идентификатор пользователя, который ставит лайк.
+     * @throws NotFoundException если пользователь или фильм не найдены.
+     */
     public void addLike(Long filmId, Long userId) {
         userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
@@ -33,6 +41,13 @@ public class FilmService {
         log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
     }
 
+    /**
+     * deleteLike - удаляет лайк пользователя с идентификаторов userId у фильма с идентификатором filmId.
+     *
+     * @param filmId идентификатор фильма, у которого удаляется лайк.
+     * @param userId идентификатор пользователя, который удаляет лайк.
+     * @throws NotFoundException если фильм не найден или у фильма нет лайка от пользователя.
+     */
     public void deleteLike(Long filmId, Long userId) {
         Film film = filmStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
@@ -44,6 +59,12 @@ public class FilmService {
         log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
     }
 
+    /**
+     * getMostLiked - возвращает список из count самых популярных фильмов.
+     *
+     * @param count количество фильмов, которые нужно вернуть.
+     * @return список из count самых популярных фильмов.
+     */
     public List<Film> getMostLiked(int count) {
         Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
         return filmStorage.getAll()

@@ -13,9 +13,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * UserService.
+ * Сервис для управления пользователями и их друзьями.
+ * Позволяет добавлять и удалять друзей, а также получать список общих друзей для двух пользователей.
  */
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -23,21 +23,33 @@ public class UserService {
 
     private final UserStorage userStorage;
 
+    /**
+     * addFriend - добавляет пользователя с идентификатором friendId в список друзей пользователя с идентификатором userId.
+     *
+     * @param userId   идентификатор пользователя
+     * @param friendId идентификатор друга, которого нужно добавить
+     * @throws NotFoundException если пользователь или друг не найдены
+     */
     public void addFriend(Long userId, Long friendId) {
-        // Находим пользователя по userId, если не найден, выбрасываем исключение
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
-        // Находим друга по friendId, если не найден, выбрасываем исключение
         User friend = userStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
 
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
-
     }
 
+    /**
+     * getCommonFriends - возвращает список общих друзей для пользователей с идентификаторами userId и otherId.
+     *
+     * @param userId  идентификатор первого пользователя
+     * @param otherId идентификатор второго пользователя
+     * @return список общих друзей
+     * @throws NotFoundException если один из пользователей не найден
+     */
     public List<User> getCommonFriends(Long userId, Long otherId) {
         Set<Long> userFriendsSet = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"))
@@ -55,8 +67,15 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * deleteFriend - удаляет пользователя с идентификатором friendId из списка друзей пользователя с идентификатором
+     * userId.
+     *
+     * @param userId   идентификатор пользователя
+     * @param friendId идентификатор друга, которого нужно удалить
+     * @throws NotFoundException если пользователь не найден или у него нет друзей
+     */
     public void deleteFriend(Long userId, Long friendId) {
-
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         if (user.getFriends() == null) {
@@ -74,6 +93,12 @@ public class UserService {
         log.info("Пользователь с id {} удалил их друзей пользователя с id {}.", userId, friendId);
     }
 
+    /**
+     * getUserFriends - получает список всех друзей пользователя с идентификатором userId.
+     *
+     * @param userId идентификатор пользователя
+     * @throws NotFoundException если пользователь не найден или у него нет друзей
+     */
     public List<User> getUserFriends(Long userId) {
         User user = userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
