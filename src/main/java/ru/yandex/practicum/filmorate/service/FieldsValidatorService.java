@@ -105,6 +105,7 @@ public class FieldsValidatorService {
             throw new ValidationException("Id должен быть указан");
         }
     }
+
     /**
      * validateUpdateUserFields проверяет уникальность польователя при обновлении.
      *
