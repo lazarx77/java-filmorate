@@ -11,8 +11,11 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 
 import java.util.Map;
 
+
 /**
- * ErrorHandler.
+ * ErrorHandler - класс для обработки исключений и формирования соответствующих ответов.
+ * Он перехватывает различные типы исключений, такие как ValidationException, NotFoundException и другие,
+ * и возвращает соответствующие ответы с описанием ошибки и кодом состояния HTTP.
  */
 @Slf4j
 @RestControllerAdvice

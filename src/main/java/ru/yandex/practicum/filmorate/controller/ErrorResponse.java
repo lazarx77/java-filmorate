@@ -4,7 +4,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * ErrorResponse.
+ * ErrorResponse - класс, представляющий ошибку в формате JSON.
+ * Содержит поля для кода ошибки и ее описания.
  */
 @Getter
 @RequiredArgsConstructor
