@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -9,32 +10,51 @@ import java.time.LocalDate;
 import java.util.Map;
 
 /**
- * FieldsValidator, класс для валидации полей.
+ * FieldsValidatorService - класс для валидации полей фильмов и пользователей.
+ * Проверяет корректность данных при создании, обновлении и удалении объектов.
  */
 @Slf4j
-public class FieldsValidator {
+public class FieldsValidatorService {
 
     private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
 
+    /**
+     * validateReleaseDate проверяет, что дата релиза фильма не раньше 28 декабря 1895 года.
+     *
+     * @param film - объект класса Film, для которого проверяется дата релиза.
+     * @throws ValidationException - если дата релиза раньше 28 декабря 1895 года.
+     */
     public static void validateReleaseDate(Film film) {
         if (film.getReleaseDate().isBefore(CINEMA_BIRTHDAY)) {
             throw new ValidationException("Дата релиза не может быть раньше дня рождения Кино");
         }
     }
 
+    /**
+     * validateFilmId проверяет, что у фильма задан идентификатор.
+     *
+     * @param film - объект класса Film, для которого проверяется наличие идентификатора.
+     * @throws ValidationException - если идентификатор не задан.
+     */
     public static void validateFilmId(Film film) {
         if (film.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
     }
 
+    /**
+     * validateUpdateFilmFields проверяет уникальность фильма при обновлении.
+     *
+     * @param updatedFilm - объект класса Film с обновленными данными.
+     * @param films       - коллекция всех существующих фильмов.
+     * @throws NotFoundException   - если фильм с указанным идентификатором не найден.
+     * @throws ValidationException - если обновленный фильм уже существует в коллекции.
+     */
     public static void validateUpdateFilmFields(Film updatedFilm, Map<Long, Film> films) {
-
         if (!films.containsKey(updatedFilm.getId())) {
-            throw new ValidationException("Фильм с id = " + updatedFilm.getId() + " не найден");
+            throw new NotFoundException("Фильм с id = " + updatedFilm.getId() + " не найден");
         }
 
-        //проверяем на дубликат фильма при обновлении
         if (!updatedFilm.equals(films.get(updatedFilm.getId()))) { //@EqualsAndHashCode(of = {"name", "releaseDate"})
             for (Long id : films.keySet()) {
                 Film middleFilm = films.get(id);
@@ -56,12 +76,15 @@ public class FieldsValidator {
         if (updatedFilm.getDescription() == null) {
             updatedFilm.setDuration(oldFilm.getDuration());
         }
-        if (updatedFilm.getDuration() == null) {
-            updatedFilm.setDuration(oldFilm.getDuration());
-        }
-
     }
 
+    /**
+     * emailDoubleValidator проверяет уникальность пользователя.
+     *
+     * @param user  - объект класса User с обновленными данными.
+     * @param users - коллекция всех существующих всех пользователей.
+     * @throws ValidationException - если имейл уже используется.
+     */
     public static void emailDoubleValidator(User user, Map<Long, User> users) {
         for (Long id : users.keySet()) {
             User middleUser = users.get(id);
@@ -71,19 +94,32 @@ public class FieldsValidator {
         }
     }
 
+    /**
+     * validateUserId проверяет, что у пользователя задан идентификатор.
+     *
+     * @param user - объект класса Film, для которого проверяется наличие идентификатора.
+     * @throws ValidationException - если идентификатор не задан.
+     */
     public static void validateUserId(User user) {
         if (user.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
     }
 
+    /**
+     * validateUpdateUserFields проверяет уникальность польователя при обновлении.
+     *
+     * @param updatedUser - объект класса User с обновленными данными.
+     * @param users       - коллекция всех существующих пользователей.
+     * @throws NotFoundException   - если пользователь с указанным идентификатором не найден.
+     * @throws ValidationException - если обновленный пользователь (имеил) уже существует в коллекции.
+     */
     public static void validateUpdateUserFields(User updatedUser, Map<Long, User> users) {
 
         if (!users.containsKey(updatedUser.getId())) {
-            throw new ValidationException("Польователь с id = " + updatedUser.getId() + " не найден");
+            throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
         }
 
-        //проверка на дубликат email при обновлении пользователей
         if (!updatedUser.getEmail().equals(users.get(updatedUser.getId()).getEmail())) {
             for (Long id : users.keySet()) {
                 User middleUser = users.get(id);

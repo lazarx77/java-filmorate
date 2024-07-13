@@ -5,15 +5,27 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * User.
+ * User представляет пользователя.
+ * Содержит информацию о пользователе, такую как идентификатор, электронная почта, логин, имя и дата рождения.
+ * Хранит поля:
+ * id - идентификатор пользователя
+ * friends - список идентификаторов друзей пользователя
+ * email - электронная почта пользователя
+ * login - логин пользователя
+ * name - имя пользователя
+ * birthday - дата рождения пользователя
  */
 @Data
 @EqualsAndHashCode(of = {"email"})
 public class User {
 
     private Long id;
+    private Set<Long> friends = new HashSet<>();
+
     @NotEmpty(message = "Электронная почта не может быть пустой")
     @NotNull(message = "Электронная почта не может быть Null")
     @Email(message = "Электронная почта должна быть пустой и должна соответствовать формату электронной почты")
