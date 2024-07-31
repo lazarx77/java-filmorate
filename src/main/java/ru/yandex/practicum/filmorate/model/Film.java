@@ -37,5 +37,5 @@ public class Film {
     @NotEmpty(message = "Рейтинг не может быть пустым")
     @NotNull(message = "Рейтинг не может быть Null")
     private Rating rating;
-    private Set<String> genre = new HashSet<>();
+    private Set<Integer> genres = new HashSet<>();
 }

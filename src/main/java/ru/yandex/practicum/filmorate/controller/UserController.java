@@ -36,6 +36,43 @@ public class UserController {
         return userStorage.getAll();
     }
 
+
+    /**
+     * findById - получает пользователя с идентификатором id.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Пользователь с указанным идентификатором.
+     * @throws NotFoundException Если пользователь с указанным идентификатором не найден.
+     */
+    @GetMapping("/{id}")
+    public User findById(@PathVariable("id") long id) {
+        return userStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
+    }
+
+    /**
+     * createUser - создает нового пользователя.
+     *
+     * @param user Объект пользователя для создания.
+     * @return Созданный пользователь.
+     */
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public long createUser(@Valid @RequestBody User user) {
+        return userStorage.createUser(user).getId();
+    }
+
+    /**
+     * update - обновляет существующего пользователя.
+     *
+     * @param updatedUser Объект пользователя с обновленными данными.
+     * @return Обновленный пользователь.
+     */
+    @PutMapping
+    public User update(@Valid @RequestBody User updatedUser) {
+        return userStorage.update(updatedUser);
+    }
+
     /**
      * addFriend - добавляет пользователя с идентификатором friendId в список друзей пользователя с идентификатором id.
      *
@@ -82,39 +119,4 @@ public class UserController {
         return userService.getCommonFriends(id, otherId);
     }
 
-    /**
-     * findById - получает пользователя с идентификатором id.
-     *
-     * @param id Идентификатор пользователя.
-     * @return Пользователь с указанным идентификатором.
-     * @throws NotFoundException Если пользователь с указанным идентификатором не найден.
-     */
-    @GetMapping("/{id}")
-    public User findById(@PathVariable("id") long id) {
-        return userStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
-    }
-
-    /**
-     * createUser - создает нового пользователя.
-     *
-     * @param user Объект пользователя для создания.
-     * @return Созданный пользователь.
-     */
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@Valid @RequestBody User user) {
-        return userStorage.createUser(user);
-    }
-
-    /**
-     * update - обновляет существующего пользователя.
-     *
-     * @param updatedUser Объект пользователя с обновленными данными.
-     * @return Обновленный пользователь.
-     */
-     @PutMapping
-    public User update(@Valid @RequestBody User updatedUser) {
-        return userStorage.update(updatedUser);
-    }
 }
