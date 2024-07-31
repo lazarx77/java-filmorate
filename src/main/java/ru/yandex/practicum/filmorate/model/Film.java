@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -35,4 +34,8 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Продолжительность не может быть отрицательной")
     private Long duration;
+    @NotEmpty(message = "Рейтинг не может быть пустым")
+    @NotNull(message = "Рейтинг не может быть Null")
+    private Rating rating;
+    private Set<String> genre = new HashSet<>();
 }
