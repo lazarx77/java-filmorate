@@ -84,15 +84,16 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
 
-        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID, STATUS)" +
-                "VALUES (?,?,?)";
-
-        update(INSERT_FRIEND_QUERY, userId, friendId, false);
-        update(INSERT_FRIEND_QUERY, friendId, userId, true);
+        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID, STATUS) VALUES (?,?,?)";
 
         String FRIEND_CHECK_QUERY = "SELECT STATUS FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
+        if (findOne(FRIEND_CHECK_QUERY, friendId, userId).isEmpty()) {
+            update(INSERT_FRIEND_QUERY, userId, friendId, false);
+            update(INSERT_FRIEND_QUERY, friendId, userId, true);
+        } else if {
+            (findOne(FRIEND_CHECK_QUERY, friendId, userId))
+        }
 
-        String UPDATE_FRIEND_QUERY = "UPDATE USERS SET FRIENDS = FRIENDS + 1 WHERE id = ?";
 
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
     }
