@@ -15,7 +15,7 @@ import java.util.Optional;
  * памяти приложения.
  * Он хранит пользователей в HashMap и позволяет создавать, обновлять и получать пользователей из памяти.
  */
-@Component
+
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
 
