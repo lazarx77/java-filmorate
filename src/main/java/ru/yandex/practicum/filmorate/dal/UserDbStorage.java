@@ -5,13 +5,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exceptions.InternalServerException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,9 +55,12 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         FieldsValidatorService.validateUserId(updatedUser);
 
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
-        List<String> userLogins = jdbc.queryForList("SELECT LOGIN FROM USERS ", String.class);
 
-        if (userLogins.contains(updatedUser.getLogin())) {
+        String sql = "SELECT COUNT(*) FROM USERS WHERE LOGIN = ?";
+
+        int count = jdbc.queryForObject(sql, Integer.class, updatedUser.getLogin());
+
+        if (count > 0) {
             throw new IllegalArgumentException("Пользователь с таким логином уже существует.");
         }
 
@@ -73,31 +74,48 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         );
         log.info("Пользователя с именем: {} обновлены.", updatedUser.getName());
 
-//        updatedUser.setFriends();
         return updatedUser;
     }
 
     public void addFriend(Long userId, Long friendId) {
-        findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-
-        findById(friendId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
-
-        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID, STATUS) VALUES (?,?,?)";
-
-        String FRIEND_CHECK_QUERY = "SELECT STATUS FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
-        if (findOne(FRIEND_CHECK_QUERY, friendId, userId).isEmpty()) {
-            update(INSERT_FRIEND_QUERY, userId, friendId, false);
-            update(INSERT_FRIEND_QUERY, friendId, userId, true);
-        } else if {
-            (findOne(FRIEND_CHECK_QUERY, friendId, userId))
+        // Проверка существования пользователей
+        if (!isUserExist(userId)) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
 
+        if (!isUserExist(friendId)) {
+            throw new NotFoundException("Пользователь с id " + friendId + " не найден");
+        }
+
+        // Проверка статуса дружбы
+        String FRIEND_CHECK_QUERY = "SELECT STATUS FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
+        Boolean status = jdbc.queryForObject(FRIEND_CHECK_QUERY, Boolean.class, friendId, userId);
+
+        // Запросы на добавление или обновление дружбы
+        if (status == null) {
+            addFriendship(userId, friendId, false);
+            addFriendship(friendId, userId, true);
+        } else if (Boolean.TRUE.equals(status)) {
+            updateFriendshipStatus(userId, friendId);
+        }
 
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
     }
 
+    private boolean isUserExist(Long userId) {
+        String query = "SELECT COUNT(*) FROM USERS WHERE ID = ?";
+        return jdbc.queryForObject(query, Integer.class, userId) > 0;
+    }
+
+    private void addFriendship(Long userId, Long friendId, boolean status) {
+        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID, STATUS) VALUES (?, ?, ?)";
+        update(INSERT_FRIEND_QUERY, userId, friendId, status);
+    }
+
+    private void updateFriendshipStatus(Long userId, Long friendId) {
+        String UPDATE_STATUS_QUERY = "UPDATE FRIENDSHIP SET STATUS = ? WHERE USER_ID = ? AND FRIEND_ID = ?";
+        update(UPDATE_STATUS_QUERY, true, userId, friendId);
+    }
 
 
 
