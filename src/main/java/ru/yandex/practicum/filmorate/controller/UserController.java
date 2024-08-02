@@ -105,8 +105,8 @@ public class UserController {
      * @return Список друзей пользователя.
      */
     @GetMapping("/{id}/friends")
-    public List<User> getUserFriends(@PathVariable("id") long id) {
-        return userService.getUserFriends(id);
+    public List<Long> getUserFriends(@PathVariable("id") long id) {
+        return userDbStorage.getUserFriends(id);
     }
 
     /**

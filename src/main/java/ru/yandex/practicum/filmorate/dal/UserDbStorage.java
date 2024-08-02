@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 import ru.yandex.practicum.filmorate.service.UserFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,8 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String UPDATE_QUERY = "UPDATE USERS SET USER_NAME = ?, EMAIL = ?, LOGIN = ?, BIRTHDAY = ? " +
             "WHERE USER_ID = ?";
 //    private final Map<Long, User> users = null;
+
+    private static final String FIND_FRIENDS_BY_ID = "SELECT FRIEND_ID FROM FRIENDSHIP WHERE USER_ID = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -141,5 +144,16 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     @Override
     public Optional<User> findById(Long id) {
         return findOne(FIND_BY_ID_QUERY, id);
+    }
+
+    public List<Long> getUserFriends(Long id) {
+        List<Long> friends = new ArrayList<>();
+        jdbc.query(FIND_FRIENDS_BY_ID, rs -> {
+            while (rs.next()) {
+                friends.add(rs.getLong("FRIEND_ID"));
+            }
+            return friends;
+        }, id);
+        return friends;
     }
 }
