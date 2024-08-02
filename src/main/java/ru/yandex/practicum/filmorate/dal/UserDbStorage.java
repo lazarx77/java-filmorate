@@ -6,12 +6,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
+import ru.yandex.practicum.filmorate.service.UserFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -19,17 +20,18 @@ import java.util.Optional;
 @Qualifier("UserDbStorage")
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM USERS WHERE id = ?";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM USERS WHERE USER_ID = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM USERS";
-    private static final String INSERT_QUERY = "INSERT INTO USERS(USERNAME, EMAIL, LOGIN, BIRTHDAY)" +
+    private static final String INSERT_QUERY = "INSERT INTO USERS(USER_NAME, EMAIL, LOGIN, BIRTHDAY)" +
             "VALUES (?,?,?,?)";
-    private static final String UPDATE_QUERY = "UPDATE USERS SET USERNAME = ?, EMAIL = ?, LOGIN = ?, BIRTHDAY = ? " +
-            "WHERE id = ?";
-    private final Map<Long, User> users = null;
+    private static final String UPDATE_QUERY = "UPDATE USERS SET USER_NAME = ?, EMAIL = ?, LOGIN = ?, BIRTHDAY = ? " +
+            "WHERE USER_ID = ?";
+//    private final Map<Long, User> users = null;
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
-        super(jdbc, mapper, User.class);
+        super(jdbc, mapper);
     }
+    private final UserFieldsDbValidatorService userDbValidator = new UserFieldsDbValidatorService(jdbc, mapper);
 
     @Override
     public List<User> getAll() {
@@ -38,7 +40,8 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     @Override
     public User createUser(User user) {
-        long id = insert(
+        userDbValidator.checkUserFieldsOnCreate(user);
+        long id = insertWithGenId(
                 INSERT_QUERY,
                 user.getName(),
                 user.getEmail(),
@@ -49,21 +52,38 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return user;
     }
 
+
+//    private void checkUserFieldsOnCreate(User user) {
+//        log.info("Проверка полей пользователя при его создании; {}", user.getLogin());
+//        String FIND_BY_EMAIL = "SELECT * FROM USERS WHERE EMAIL =?";
+//        findOne(FIND_BY_EMAIL, user.getEmail());
+//        if (findOne(FIND_BY_EMAIL, user.getEmail()).isPresent()) {
+//            throw new ValidationException("Этот имейл " + user.getEmail() + " уже используется");
+//        }
+//        String FIND_BY_LOGIN = "SELECT * FROM USERS WHERE LOGIN = ?";
+//        if (findOne(FIND_BY_LOGIN, user.getLogin()).isPresent()) {
+//            throw new ValidationException("Пользователь с таким логином " + user.getLogin() + " уже существует.");
+//        }
+//    }
+
+//    private void checkUserFieldsOnUpdate(User updatedUser) {
+//        log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
+//        if (findById(updatedUser.getId()).isEmpty()) {
+//            throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
+//        }
+//
+//        String sql = "SELECT * FROM USERS WHERE EMAIL = ? AND USER_ID != ?";
+//        if (findOne(sql, updatedUser.getEmail(), updatedUser.getId()).isPresent()) {
+//            throw new ValidationException("Этот имейл " + updatedUser.getEmail() + " уже используется");
+//            }
+//        }
+
+
     @Override
     public User update(User updatedUser) {
         log.info("Проверка наличия id пользователя в запросе: {}.", updatedUser.getLogin());
         FieldsValidatorService.validateUserId(updatedUser);
-
-        log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
-
-        String sql = "SELECT COUNT(*) FROM USERS WHERE LOGIN = ?";
-
-        int count = jdbc.queryForObject(sql, Integer.class, updatedUser.getLogin());
-
-        if (count > 0) {
-            throw new IllegalArgumentException("Пользователь с таким логином уже существует.");
-        }
-
+        userDbValidator.checkUserFieldsOnUpdate(updatedUser);
         update(
                 UPDATE_QUERY,
                 updatedUser.getName(),
@@ -79,6 +99,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     public void addFriend(Long userId, Long friendId) {
         // Проверка существования пользователей
+        log.info("Проверка существования пользователей: {} и {}", userId, friendId);
         if (!isUserExist(userId)) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
@@ -94,6 +115,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         // Запросы на добавление или обновление дружбы
         if (status == null) {
             addFriendship(userId, friendId, false);
+
             addFriendship(friendId, userId, true);
         } else if (Boolean.TRUE.equals(status)) {
             updateFriendshipStatus(userId, friendId);
@@ -103,32 +125,18 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     }
 
     private boolean isUserExist(Long userId) {
-        String query = "SELECT COUNT(*) FROM USERS WHERE ID = ?";
-        return jdbc.queryForObject(query, Integer.class, userId) > 0;
+        return findById(userId).isPresent();
     }
 
     private void addFriendship(Long userId, Long friendId, boolean status) {
         String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID, STATUS) VALUES (?, ?, ?)";
-        update(INSERT_FRIEND_QUERY, userId, friendId, status);
+        insert(INSERT_FRIEND_QUERY, userId, friendId, status);
     }
 
     private void updateFriendshipStatus(Long userId, Long friendId) {
         String UPDATE_STATUS_QUERY = "UPDATE FRIENDSHIP SET STATUS = ? WHERE USER_ID = ? AND FRIEND_ID = ?";
-        update(UPDATE_STATUS_QUERY, true, userId, friendId);
+        insert(UPDATE_STATUS_QUERY, true, userId, friendId);
     }
-
-
-
-
-//    public boolean isValidUser(User user) {
-//        log.info("Проверка наличия id пользователя в запросе: {}.", user.getLogin());
-//        FieldsValidatorService.validateUserId(user);
-//        if (findById(user.getId()).isEmpty()) {
-//            throw new NotFoundException("Польователь с id = " + user.getId() + " не найден");
-//        }
-//
-//    }
-
 
     @Override
     public Optional<User> findById(Long id) {

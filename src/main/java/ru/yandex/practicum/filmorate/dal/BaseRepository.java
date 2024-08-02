@@ -16,7 +16,7 @@ import java.util.Optional;
 public class BaseRepository<T> {
     protected final JdbcTemplate jdbc;
     protected final RowMapper<T> mapper;
-    private final Class<T> entityType;
+//    private final Class<T> entityType;
 
     protected Optional<T> findOne(String query, Object... params) {
         try {
@@ -28,7 +28,7 @@ public class BaseRepository<T> {
     }
 
     protected List<T> findMany(String query, Object... params) {
-        return jdbc.queryForList(query, entityType, params);
+        return jdbc.query(query, mapper, params);
     }
 
     public boolean delete(String query, long id) {
@@ -36,7 +36,7 @@ public class BaseRepository<T> {
         return rowsDeleted > 0;
     }
 
-    protected long insert(String query, Object... params) {
+    protected long insertWithGenId(String query, Object... params) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection
@@ -53,6 +53,18 @@ public class BaseRepository<T> {
         } else {
             throw new InternalServerException("Не удалось сохранить данные");
         }
+    }
+
+    protected void insert(String query, Object... params) {
+
+        jdbc.update(connection -> {
+            PreparedStatement ps = connection
+                    .prepareStatement(query, Statement.NO_GENERATED_KEYS);
+            for (int idx = 0; idx < params.length; idx++) {
+                ps.setObject(idx + 1, params[idx]);
+            }
+            return ps;
+        });
     }
 
     protected void update(String query, Object... params) {

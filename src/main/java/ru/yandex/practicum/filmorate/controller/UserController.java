@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -25,6 +26,7 @@ public class UserController {
 
     private final UserStorage userStorage;
     private final UserService userService;
+    private final UserDbStorage userDbStorage;
 
     /**
      * getAll - получает список всех пользователей.
@@ -33,7 +35,7 @@ public class UserController {
      */
     @GetMapping
     public Collection<User> getAll() {
-        return userStorage.getAll();
+        return userDbStorage.getAll();
     }
 
 
@@ -46,7 +48,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public User findById(@PathVariable("id") long id) {
-        return userStorage.findById(id)
+        return userDbStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
     }
 
@@ -58,8 +60,8 @@ public class UserController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public long createUser(@Valid @RequestBody User user) {
-        return userStorage.createUser(user).getId();
+    public User createUser(@Valid @RequestBody User user) {
+        return userDbStorage.createUser(user);
     }
 
     /**
@@ -70,7 +72,7 @@ public class UserController {
      */
     @PutMapping
     public User update(@Valid @RequestBody User updatedUser) {
-        return userStorage.update(updatedUser);
+        return userDbStorage.update(updatedUser);
     }
 
     /**
@@ -81,7 +83,7 @@ public class UserController {
      */
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
-        userService.addFriend(id, friendId);
+        userDbStorage.addFriend(id, friendId);
     }
 
     /**
