@@ -48,8 +48,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public User findById(@PathVariable("id") long id) {
-        return userDbStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
+        return userDbStorage.getUserById(id);
     }
 
     /**
@@ -95,7 +94,7 @@ public class UserController {
      */
     @DeleteMapping("/{id}/friends/{friendId}")
     public void deleteFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
-        userService.deleteFriend(id, friendId);
+        userDbStorage.deleteFriend(id, friendId);
     }
 
     /**
@@ -105,7 +104,7 @@ public class UserController {
      * @return Список друзей пользователя.
      */
     @GetMapping("/{id}/friends")
-    public List<Long> getUserFriends(@PathVariable("id") long id) {
+    public List<User> getUserFriends(@PathVariable("id") long id) {
         return userDbStorage.getUserFriends(id);
     }
 

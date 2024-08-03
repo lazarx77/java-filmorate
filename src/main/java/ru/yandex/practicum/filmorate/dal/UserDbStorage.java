@@ -12,9 +12,7 @@ import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 import ru.yandex.practicum.filmorate.service.UserFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Repository
@@ -29,16 +27,25 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             "WHERE USER_ID = ?";
 //    private final Map<Long, User> users = null;
 
-    private static final String FIND_FRIENDS_BY_ID = "SELECT FRIEND_ID FROM FRIENDSHIP WHERE USER_ID = ?";
+
+    private static final String FIND_FRIENDS_BY_ID = "SELECT FRIEND_ID AS USER_ID, EMAIL, LOGIN, USER_NAME, BIRTHDAY " +
+            "FROM FRIENDSHIP INNER JOIN USERS ON FRIENDSHIP.FRIEND_ID = USERS.USER_ID WHERE FRIENDSHIP.USER_ID = ?";
+    private static final String FIND_FRIENDS_IDS = "SELECT FRIEND_ID FROM FRIENDSHIP WHERE USER_ID = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
     }
+
     private final UserFieldsDbValidatorService userDbValidator = new UserFieldsDbValidatorService(jdbc, mapper);
 
     @Override
     public List<User> getAll() {
-        return findMany(FIND_ALL_QUERY);
+        List<User> users = findMany(FIND_ALL_QUERY);
+        for (User user : users) {
+            user.setFriends(getFriendsSet(user.getId()));
+        }
+
+        return users;
     }
 
     @Override
@@ -95,6 +102,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
                 updatedUser.getBirthday(),
                 updatedUser.getId()
         );
+        updatedUser.setFriends(getFriendsSet(updatedUser.getId()));
         log.info("Пользователя с именем: {} обновлены.", updatedUser.getName());
 
         return updatedUser;
@@ -103,42 +111,84 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     public void addFriend(Long userId, Long friendId) {
         // Проверка существования пользователей
         log.info("Проверка существования пользователей: {} и {}", userId, friendId);
-        if (!isUserExist(userId)) {
-            throw new NotFoundException("Пользователь с id " + userId + " не найден");
-        }
-
-        if (!isUserExist(friendId)) {
+        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+//        if (findById(userId).isEmpty()) {
+//            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+//        }
+//        User friend = findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
+        if (findById(friendId).isEmpty()) {
             throw new NotFoundException("Пользователь с id " + friendId + " не найден");
         }
+        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID) VALUES (?, ?)";
+        insert(INSERT_FRIEND_QUERY, userId, friendId);
+        user.setFriends(getFriendsSet(userId));
 
         // Проверка статуса дружбы
-        String FRIEND_CHECK_QUERY = "SELECT STATUS FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
-        Boolean status = jdbc.queryForObject(FRIEND_CHECK_QUERY, Boolean.class, friendId, userId);
+//        String FRIEND_CHECK_QUERY = "SELECT COUNT(*) FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
+//        findOne(FRIEND_CHECK_QUERY, )
+
+//        Boolean status = jdbc.queryForObject(FRIEND_CHECK_QUERY, Boolean.class, friendId, userId);
+//        addFriendship(friendId, userId);
 
         // Запросы на добавление или обновление дружбы
-        if (status == null) {
-            addFriendship(userId, friendId, false);
-
-            addFriendship(friendId, userId, true);
-        } else if (Boolean.TRUE.equals(status)) {
-            updateFriendshipStatus(userId, friendId);
-        }
+//        if (status == null) {
+//            addFriendship(userId, friendId, false);
+//
+//            addFriendship(friendId, userId, true);
+//        } else if (Boolean.TRUE.equals(status)) {
+//            updateFriendshipStatus(userId, friendId);
+//        }
 
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
     }
 
-    private boolean isUserExist(Long userId) {
-        return findById(userId).isPresent();
+//    private boolean isUserExist(Long userId) {
+//        return findById(userId).isPresent();
+//    }
+
+//    private void addFriendship(Long userId, Long friendId) {
+//        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID) VALUES (?, ?)";
+//        insert(INSERT_FRIEND_QUERY, friendId, userId);
+//    }
+
+//    private void updateFriendshipStatus(Long userId, Long friendId) {
+//        String UPDATE_STATUS_QUERY = "UPDATE FRIENDSHIP SET STATUS = ? WHERE USER_ID = ? AND FRIEND_ID = ?";
+//        insert(UPDATE_STATUS_QUERY, true, userId, friendId);
+//    }
+
+    public List<User> getUserFriends(Long id) {
+        User user = findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
+        user.setFriends(getFriendsSet(id));
+        System.out.println(user);
+        return findMany(FIND_FRIENDS_BY_ID, id);
+    }
+//    public List<Long> getUserFriends(Long id) {
+//        return findManyIds(FIND_FRIENDS_BY_ID, id);
+//    }
+
+    //Вспомогательный метод для получения коллекции друзей пользователя
+    private Set<Long> getFriendsSet(Long id) {
+        return new HashSet<>(findManyIds(FIND_FRIENDS_IDS, id));
     }
 
-    private void addFriendship(Long userId, Long friendId, boolean status) {
-        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID, STATUS) VALUES (?, ?, ?)";
-        insert(INSERT_FRIEND_QUERY, userId, friendId, status);
-    }
+    public void deleteFriend(Long userId, Long friendId) {
+        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+//        User friend = findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
+//        log.info("Проверка существования пользователей: {} и {}", userId, friendId);
+//        if (findById(userId).isEmpty()) {
+//            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+//        }
+//
+        if (findById(friendId).isEmpty()) {
+            throw new NotFoundException("Пользователь с id " + friendId + " не найден");
+        }
+        String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
+        update(DELETE_FRIEND_QUERY, userId, friendId);
+        user.setFriends(getFriendsSet(userId));
+        log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
+//        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+//        User friend = findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
 
-    private void updateFriendshipStatus(Long userId, Long friendId) {
-        String UPDATE_STATUS_QUERY = "UPDATE FRIENDSHIP SET STATUS = ? WHERE USER_ID = ? AND FRIEND_ID = ?";
-        insert(UPDATE_STATUS_QUERY, true, userId, friendId);
     }
 
     @Override
@@ -146,14 +196,19 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return findOne(FIND_BY_ID_QUERY, id);
     }
 
-    public List<Long> getUserFriends(Long id) {
-        List<Long> friends = new ArrayList<>();
-        jdbc.query(FIND_FRIENDS_BY_ID, rs -> {
-            while (rs.next()) {
-                friends.add(rs.getLong("FRIEND_ID"));
-            }
-            return friends;
-        }, id);
-        return friends;
+    public User getUserById(Long id) {
+        User user = findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
+        user.setFriends(getFriendsSet(id));
+        return user;
     }
+//    public List<Long> getUserFriends(Long id) {
+//        List<Long> friends = new ArrayList<>();
+//        jdbc.query(FIND_FRIENDS_BY_ID, rs -> {
+//            while (rs.next()) {
+//                friends.add(rs.getLong("FRIEND_ID"));
+//            }
+//            return friends;
+//        }, id);
+//        return friends;
+//    }
 }

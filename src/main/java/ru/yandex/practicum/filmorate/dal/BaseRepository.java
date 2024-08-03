@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.exceptions.InternalServerException;
 
@@ -29,6 +30,10 @@ public class BaseRepository<T> {
 
     protected List<T> findMany(String query, Object... params) {
         return jdbc.query(query, mapper, params);
+    }
+
+    protected List<Long> findManyIds(String query, Object... params) {
+        return jdbc.query(query, new SingleColumnRowMapper<>(Long.class), params);
     }
 
     public boolean delete(String query, long id) {

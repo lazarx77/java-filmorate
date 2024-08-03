@@ -19,14 +19,14 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
         super(jdbc, mapper);
     }
 
-    public static void emailDoubleValidator(User user, Map<Long, User> users) {
-        for (Long id : users.keySet()) {
-            User middleUser = users.get(id);
-            if (user.getEmail().equals(middleUser.getEmail())) {
-                throw new ValidationException("Этот имейл уже используется");
-            }
-        }
-    }
+//    public static void emailDoubleValidator(User user, Map<Long, User> users) {
+//        for (Long id : users.keySet()) {
+//            User middleUser = users.get(id);
+//            if (user.getEmail().equals(middleUser.getEmail())) {
+//                throw new ValidationException("Этот имейл уже используется");
+//            }
+//        }
+//    }
 
     public void checkUserFieldsOnUpdate(User updatedUser) {
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
