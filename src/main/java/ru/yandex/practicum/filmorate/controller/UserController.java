@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -25,6 +26,7 @@ public class UserController {
 
     private final UserStorage userStorage;
     private final UserService userService;
+    private final UserDbStorage userDbStorage;
 
     /**
      * getAll - получает список всех пользователей.
@@ -33,7 +35,44 @@ public class UserController {
      */
     @GetMapping
     public Collection<User> getAll() {
-        return userStorage.getAll();
+        return userDbStorage.getAll();
+    }
+
+
+    /**
+     * findById - получает пользователя с идентификатором id.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Пользователь с указанным идентификатором.
+     * @throws NotFoundException Если пользователь с указанным идентификатором не найден.
+     */
+    @GetMapping("/{id}")
+    public User findById(@PathVariable("id") long id) {
+        return userDbStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
+    }
+
+    /**
+     * createUser - создает нового пользователя.
+     *
+     * @param user Объект пользователя для создания.
+     * @return Созданный пользователь.
+     */
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public User createUser(@Valid @RequestBody User user) {
+        return userDbStorage.createUser(user);
+    }
+
+    /**
+     * update - обновляет существующего пользователя.
+     *
+     * @param updatedUser Объект пользователя с обновленными данными.
+     * @return Обновленный пользователь.
+     */
+    @PutMapping
+    public User update(@Valid @RequestBody User updatedUser) {
+        return userDbStorage.update(updatedUser);
     }
 
     /**
@@ -44,7 +83,7 @@ public class UserController {
      */
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
-        userService.addFriend(id, friendId);
+        userDbStorage.addFriend(id, friendId);
     }
 
     /**
@@ -66,8 +105,8 @@ public class UserController {
      * @return Список друзей пользователя.
      */
     @GetMapping("/{id}/friends")
-    public List<User> getUserFriends(@PathVariable("id") long id) {
-        return userService.getUserFriends(id);
+    public List<Long> getUserFriends(@PathVariable("id") long id) {
+        return userDbStorage.getUserFriends(id);
     }
 
     /**
@@ -82,39 +121,4 @@ public class UserController {
         return userService.getCommonFriends(id, otherId);
     }
 
-    /**
-     * findById - получает пользователя с идентификатором id.
-     *
-     * @param id Идентификатор пользователя.
-     * @return Пользователь с указанным идентификатором.
-     * @throws NotFoundException Если пользователь с указанным идентификатором не найден.
-     */
-    @GetMapping("/{id}")
-    public User findById(@PathVariable("id") long id) {
-        return userStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
-    }
-
-    /**
-     * createUser - создает нового пользователя.
-     *
-     * @param user Объект пользователя для создания.
-     * @return Созданный пользователь.
-     */
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@Valid @RequestBody User user) {
-        return userStorage.createUser(user);
-    }
-
-    /**
-     * update - обновляет существующего пользователя.
-     *
-     * @param updatedUser Объект пользователя с обновленными данными.
-     * @return Обновленный пользователь.
-     */
-     @PutMapping
-    public User update(@Valid @RequestBody User updatedUser) {
-        return userStorage.update(updatedUser);
-    }
 }
