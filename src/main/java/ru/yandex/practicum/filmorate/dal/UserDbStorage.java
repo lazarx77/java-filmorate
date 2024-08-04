@@ -6,13 +6,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 import ru.yandex.practicum.filmorate.service.UserFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -130,6 +132,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         user.setFriends(getFriendsSet(id));
         return user;
     }
+
     public List<User> getCommonFriends(Long userId, Long otherId) {
         Set<Long> userFriendsSet = getUserById(userId).getFriends();
         Set<Long> otherUserFriendsSet = getUserById(otherId).getFriends();
