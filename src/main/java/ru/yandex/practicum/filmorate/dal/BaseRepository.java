@@ -41,6 +41,11 @@ public class BaseRepository<T> {
         return rowsDeleted > 0;
     }
 
+    public boolean deleteByTwoIds(String query, long id, long id2) {
+        int rowsDeleted = jdbc.update(query, id, id2);
+        return rowsDeleted > 0;
+    }
+
     protected long insertWithGenId(String query, Object... params) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {

@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.service.UserFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -25,10 +26,11 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             "VALUES (?,?,?,?)";
     private static final String UPDATE_QUERY = "UPDATE USERS SET USER_NAME = ?, EMAIL = ?, LOGIN = ?, BIRTHDAY = ? " +
             "WHERE USER_ID = ?";
-
     private static final String FIND_FRIENDS_BY_ID = "SELECT FRIEND_ID AS USER_ID, EMAIL, LOGIN, USER_NAME, BIRTHDAY " +
             "FROM FRIENDSHIP INNER JOIN USERS ON FRIENDSHIP.FRIEND_ID = USERS.USER_ID WHERE FRIENDSHIP.USER_ID = ?";
     private static final String FIND_FRIENDS_IDS = "SELECT FRIEND_ID FROM FRIENDSHIP WHERE USER_ID = ?";
+    private static final String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID) VALUES (?, ?)";
+    private static final String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -42,7 +44,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         for (User user : users) {
             user.setFriends(getFriendsSet(user.getId()));
         }
-
         return users;
     }
 
@@ -82,17 +83,19 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     public void addFriend(Long userId, Long friendId) {
         // Проверка существования пользователей
         log.info("Проверка существования пользователей: {} и {}", userId, friendId);
-        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
+                " не найден"));
         if (findById(friendId).isEmpty()) {
             throw new NotFoundException("Пользователь с id " + friendId + " не найден");
         }
-        String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID) VALUES (?, ?)";
+
         insert(INSERT_FRIEND_QUERY, userId, friendId);
         user.setFriends(getFriendsSet(userId));
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
     }
 
     public List<User> getUserFriends(Long id) {
+        findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
         List<User> friends = findMany(FIND_FRIENDS_BY_ID, id);
         for (User friend : friends) {
             friend.setFriends(getFriendsSet(friend.getId()));
@@ -107,28 +110,14 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-//        User friend = findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
-//        log.info("Проверка существования пользователей: {} и {}", userId, friendId);
-//        if (findById(userId).isEmpty()) {
-//            throw new NotFoundException("Пользователь с id " + userId + " не найден");
-//        }
-//
-        String FIND_FRIEND_STATUS_QUERY = "SELECT COUNT(*) FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
-        int friendshipStatus = jdbc.queryForObject(FIND_FRIEND_STATUS_QUERY, Integer.class, userId, friendId);
-        if (friendshipStatus == 0) {
-            throw new NotFoundException("Пользователь с id " + userId + " не является другом для пользователя с id " + friendId);
-        }
-//        if (findById(friendId).isEmpty()) {
-//            throw new NotFoundException("Пользователь с id " + friendId + " не найден");
-//        }
-        String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
-        update(DELETE_FRIEND_QUERY, userId, friendId);
+        log.info("Проверка существования пользователей: {} и {}", userId, friendId);
+        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
+                " не найден"));
+        findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
+
+        deleteByTwoIds(DELETE_FRIEND_QUERY, userId, friendId);
         user.setFriends(getFriendsSet(userId));
         log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
-//        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-//        User friend = findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
-
     }
 
     @Override
@@ -141,14 +130,14 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         user.setFriends(getFriendsSet(id));
         return user;
     }
-//    public List<Long> getUserFriends(Long id) {
-//        List<Long> friends = new ArrayList<>();
-//        jdbc.query(FIND_FRIENDS_BY_ID, rs -> {
-//            while (rs.next()) {
-//                friends.add(rs.getLong("FRIEND_ID"));
-//            }
-//            return friends;
-//        }, id);
-//        return friends;
-//    }
+    public List<User> getCommonFriends(Long userId, Long otherId) {
+        Set<Long> userFriendsSet = getUserById(userId).getFriends();
+        Set<Long> otherUserFriendsSet = getUserById(otherId).getFriends();
+
+        userFriendsSet.retainAll(otherUserFriendsSet);
+
+        return userFriendsSet.stream()
+                .map(this::getUserById)
+                .collect(Collectors.toList());
+    }
 }

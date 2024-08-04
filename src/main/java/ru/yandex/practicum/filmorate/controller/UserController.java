@@ -117,7 +117,7 @@ public class UserController {
      */
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable("id") long id, @PathVariable("otherId") long otherId) {
-        return userService.getCommonFriends(id, otherId);
+        return userDbStorage.getCommonFriends(id, otherId);
     }
 
 }
