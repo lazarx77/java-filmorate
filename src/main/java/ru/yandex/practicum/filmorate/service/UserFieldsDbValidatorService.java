@@ -13,7 +13,7 @@ import java.util.Map;
 @Slf4j
 public class UserFieldsDbValidatorService extends BaseRepository<User> {
 
-    private static final String EMAIL_VALIDATION_QUERY = "SELECT * FROM USERS WHERE EMAIL =?";
+    private static final String FIND_BY_EMAIL = "SELECT * FROM USERS WHERE EMAIL =?";
 
     public UserFieldsDbValidatorService(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -42,7 +42,6 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
 
     public void checkUserFieldsOnCreate(User user) {
         log.info("Проверка полей пользователя при его создании; {}", user.getLogin());
-        String FIND_BY_EMAIL = "SELECT * FROM USERS WHERE EMAIL =?";
         findOne(FIND_BY_EMAIL, user.getEmail());
         if (findOne(FIND_BY_EMAIL, user.getEmail()).isPresent()) {
             throw new ValidationException("Этот имейл " + user.getEmail() + " уже используется");

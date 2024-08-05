@@ -18,7 +18,6 @@ import java.util.Optional;
  * При добавлении и обновлении фильмов выполняется проверка корректности данных с помощью сервиса
  * FieldsValidatorService.
  */
-@Component
 @Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
 

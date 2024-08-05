@@ -108,7 +108,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     //Вспомогательный метод для получения коллекции друзей пользователя
     private Set<Long> getFriendsSet(Long id) {
-        return new HashSet<>(findManyIds(FIND_FRIENDS_IDS, id));
+        return new HashSet<>(findManyInstances(FIND_FRIENDS_IDS, Long.class, id));
     }
 
     public void deleteFriend(Long userId, Long friendId) {

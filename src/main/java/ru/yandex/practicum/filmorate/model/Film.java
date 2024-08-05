@@ -34,8 +34,8 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Продолжительность не может быть отрицательной")
     private Long duration;
-    @NotEmpty(message = "Рейтинг не может быть пустым")
     @NotNull(message = "Рейтинг не может быть Null")
-    private Rating rating;
-    private Set<Integer> genres = new HashSet<>();
+    private Mpa mpa;
+    @NotNull(message = "Поле ЖАНРЫ не может быть Null")
+    private Set<Genre> genres = new HashSet<>();
 }

@@ -13,7 +13,6 @@ import java.util.Optional;
  * @see User
  */
 @Component
-
 public interface UserStorage {
 
     /**

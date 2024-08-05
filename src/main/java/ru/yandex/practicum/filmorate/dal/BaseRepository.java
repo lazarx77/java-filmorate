@@ -32,8 +32,12 @@ public class BaseRepository<T> {
         return jdbc.query(query, mapper, params);
     }
 
-    protected List<Long> findManyIds(String query, Object... params) {
-        return jdbc.query(query, new SingleColumnRowMapper<>(Long.class), params);
+//    protected List<Long> findManyIds(String query, Object... params) {
+//        return jdbc.query(query, new SingleColumnRowMapper<>(Long.class), params);
+//    }
+
+    protected <T> List<T> findManyInstances(String query, Class<T> type, Object... params) {
+        return jdbc.query(query, new SingleColumnRowMapper<>(type), params);
     }
 
     public boolean delete(String query, long id) {

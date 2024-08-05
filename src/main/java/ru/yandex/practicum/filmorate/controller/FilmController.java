@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -22,6 +23,7 @@ import java.util.List;
 public class FilmController {
 
     private final FilmStorage filmStorage;
+    private final FilmDbStorage filmDbStorage;
     private final FilmService filmService;
 
     /**
@@ -55,7 +57,7 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@Valid @RequestBody Film film) {
-        return filmStorage.addFilm(film);
+        return filmDbStorage.addFilm(film);
     }
 
     /**
@@ -76,7 +78,7 @@ public class FilmController {
      */
     @GetMapping
     public Collection<Film> getAll() {
-        return filmStorage.getAll();
+        return filmDbStorage.getAll();
     }
 
     /**
@@ -87,6 +89,6 @@ public class FilmController {
      */
     @PutMapping
     public Film update(@Valid @RequestBody Film updatedFilm) {
-        return filmStorage.update(updatedFilm);
+        return filmDbStorage.update(updatedFilm);
     }
 }
