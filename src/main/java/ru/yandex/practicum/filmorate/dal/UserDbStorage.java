@@ -85,14 +85,10 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     public void addFriend(Long userId, Long friendId) {
         // Проверка существования пользователей
         log.info("Проверка существования пользователей: {} и {}", userId, friendId);
-        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
+        findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
                 " не найден"));
-        if (findById(friendId).isEmpty()) {
-            throw new NotFoundException("Пользователь с id " + friendId + " не найден");
-        }
-
+        findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         insert(INSERT_FRIEND_QUERY, userId, friendId);
-        user.setFriends(getFriendsSet(userId));
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
     }
 
@@ -113,12 +109,10 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     public void deleteFriend(Long userId, Long friendId) {
         log.info("Проверка существования пользователей: {} и {}", userId, friendId);
-        User user = findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
+        findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
                 " не найден"));
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
-
         deleteByTwoIds(DELETE_FRIEND_QUERY, userId, friendId);
-        user.setFriends(getFriendsSet(userId));
         log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
     }
 

@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
+import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -18,6 +19,7 @@ import ru.yandex.practicum.filmorate.service.MpaDbService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 //import static ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage.films;
 
@@ -30,18 +32,15 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
     private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
-    private static final String FIND_MPA_BY_MPA_ID = "SELECT MPA_NAME FROM MPA WHERE MPA_ID = ?";
-    private static final String FIND_GENRES_BY_FILM_ID = "SELECT FILMS_GENRES.GENRE_ID, GENRES.GENRE_NAME \n" +
-            "FROM FILMS_GENRES \n" +
-            "LEFT JOIN GENRES ON GENRES.GENRE_ID = FILMS_GENRES.GENRE_ID \n" +
-            "WHERE FILMS_GENRES.FILM_ID = ?;";
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
             "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
+    private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(FILM_ID, USER_ID) VALUES (?,?)";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
-    private static final String FIND_MPA = "SELECT MPA FROM FILMS WHERE FILM_ID = ?";
 
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
+    private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
+    private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final MpaDbService mpaDbService = new MpaDbService(jdbc, mpaMapper);
@@ -49,19 +48,20 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
-//        this.mpaMapper = mpaMapper;
     }
 
     private final FilmFieldsDbValidatorService filmDbValidator = new FilmFieldsDbValidatorService(jdbc, mapper);
+    private final UserDbStorage userDbStorage = new UserDbStorage(jdbc, new UserRowMapper());
 
     @Override
     public Collection<Film> getAll() {
         List<Film> films = findMany(FIND_ALL_FILMS_QUERY);
         for (Film film : films) {
-            System.out.println(film);
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
-            film.setGenres(new HashSet<>(findManyInstances(FIND_GENRES_BY_FILM_ID, Genre.class, film.getId())));
+            film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+            System.out.println(film);
+
         }
         return films;
     }
@@ -132,5 +132,49 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         return film;
+    }
+
+    public void addLike(Long filmId, Long userId) {
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
+        insert(INSERT_LIKE_QUERY, filmId, userId);
+//        film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, filmId)));
+
+        log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
+    }
+
+    /**
+     * deleteLike - удаляет лайк пользователя с идентификаторов userId у фильма с идентификатором filmId.
+     *
+     * @param filmId идентификатор фильма, у которого удаляется лайк.
+     * @param userId идентификатор пользователя, который удаляет лайк.
+     * @throws NotFoundException если фильм не найден или у фильма нет лайка от пользователя.
+     */
+    public void deleteLike(Long filmId, Long userId) {
+        log.info("Проверка существования фильма и пользователя: {} и {}", filmId, userId);
+        findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
+        userDbStorage.findById(userId);
+        if (findManyInstances(COUNT_LIKES_QUERY, Long.class, filmId, userId).getFirst() == 0) {
+            throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
+        }
+        deleteByTwoIds(DELETE_LIKE_QUERY, filmId, userId);
+        log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
+    }
+
+    /**
+     * getMostLiked - возвращает список из count самых популярных фильмов.
+     *
+     * @param count количество фильмов, которые нужно вернуть.
+     * @return список из count самых популярных фильмов.
+     */
+    public List<Film> getMostLiked(int count) {
+        Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+        return getAll()
+                .stream()
+                .sorted(comparator)
+                .limit(count)
+                .collect(Collectors.toList());
     }
 }
