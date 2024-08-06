@@ -90,6 +90,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      */
     @Override
     public Film addFilm(Film film) {
+        log.info("Добавляем фильм: {}", film.getName());
         FieldsValidatorService.validateReleaseDate(film);
         mpaDbService.checkMpaId(film.getMpa().getId());
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
@@ -185,8 +186,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      * @throws NotFoundException Если фильм или пользователь не найдены.
      */
     public void addLike(Long filmId, Long userId) {
+        log.info("Проверка существования пользователя с Id {} при добавлении like.", userId);
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        log.info("Проверка существования фильма с Id {} при добавлении like.", filmId);
         findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         insert(INSERT_LIKE_QUERY, filmId, userId);
