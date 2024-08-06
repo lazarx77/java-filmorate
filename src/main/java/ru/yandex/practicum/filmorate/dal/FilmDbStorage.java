@@ -21,7 +21,6 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-//import static ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage.films;
 
 @Slf4j
 @Repository
@@ -85,6 +84,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        log.info("Фильм {} добавлен", film.getName());
         return film;
     }
 
@@ -127,10 +127,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         Set<Genre> genres = film.getGenres();
         for (Genre genre : genres) {
             genre.setName(genreDbService.findGenreNameById(genre.getId()));
-            insert(INSERT_FILM_GENRE_QUERY, id, genre.getId());
         }
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(id)));
         return film;
     }
 
@@ -140,8 +140,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         insert(INSERT_LIKE_QUERY, filmId, userId);
-//        film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, filmId)));
-
         log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
     }
 

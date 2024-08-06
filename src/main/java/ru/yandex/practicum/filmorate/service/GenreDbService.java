@@ -18,7 +18,9 @@ public class GenreDbService extends BaseRepository<Genre> {
 
     private static final String FIND_GENRE_BY_ID = "SELECT * FROM GENRES WHERE GENRE_ID = ?";
 
-    private static final String FIND_GENRES_BY_FILM_ID = "SELECT FILMS_GENRES.GENRE_ID AS GENRE_ID, GENRES.GENRE_NAME AS GENRE_NAME FROM FILMS_GENRES LEFT JOIN GENRES ON GENRES.GENRE_ID = FILMS_GENRES.GENRE_ID WHERE FILMS_GENRES.FILM_ID = ?;";
+    private static final String FIND_GENRES_BY_FILM_ID = "SELECT FILMS_GENRES.GENRE_ID AS GENRE_ID, " +
+            "GENRES.GENRE_NAME AS GENRE_NAME FROM FILMS_GENRES LEFT JOIN GENRES ON GENRES.GENRE_ID = " +
+            "FILMS_GENRES.GENRE_ID WHERE FILMS_GENRES.FILM_ID = ? ORDER BY FILMS_GENRES.GENRE_ID;";
 
     public GenreDbService(JdbcTemplate jdbc, RowMapper<Genre> mapper) {
         super(jdbc, mapper);
