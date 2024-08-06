@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;

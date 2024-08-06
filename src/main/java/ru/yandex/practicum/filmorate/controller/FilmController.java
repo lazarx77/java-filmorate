@@ -6,9 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,9 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmController {
 
-    private final FilmStorage filmStorage;
     private final FilmDbStorage filmDbStorage;
-    private final FilmService filmService;
 
     /**
      * addLike - добавляет лайк фильму с указанным id от пользователя с указанным userId.

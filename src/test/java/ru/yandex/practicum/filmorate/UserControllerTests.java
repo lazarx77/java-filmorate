@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SpringBootTest
 @Slf4j
+@ContextConfiguration(classes = {User.class})
 class UserControllerTests {
     private User user;
     private Validator validator;

@@ -15,9 +15,9 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 public class BaseRepository<T> {
+
     protected final JdbcTemplate jdbc;
     protected final RowMapper<T> mapper;
-//    private final Class<T> entityType;
 
     protected Optional<T> findOne(String query, Object... params) {
         try {
@@ -31,10 +31,6 @@ public class BaseRepository<T> {
     protected List<T> findMany(String query, Object... params) {
         return jdbc.query(query, mapper, params);
     }
-
-//    protected List<Long> findManyIds(String query, Object... params) {
-//        return jdbc.query(query, new SingleColumnRowMapper<>(Long.class), params);
-//    }
 
     protected <T> List<T> findManyInstances(String query, Class<T> type, Object... params) {
         return jdbc.query(query, new SingleColumnRowMapper<>(type), params);

@@ -16,6 +16,7 @@ import java.util.List;
 public class MpaDbService extends BaseRepository<Mpa> {
 
     private static final String FIND_BY_ID = "SELECT * FROM MPA WHERE MPA_ID = ?";
+    private static final String FIND_ALL_MPA = "SELECT * FROM MPA";
 
     public MpaDbService(JdbcTemplate jdbc, RowMapper<Mpa> mapper) {
         super(jdbc, mapper);
@@ -27,7 +28,7 @@ public class MpaDbService extends BaseRepository<Mpa> {
     }
 
     public List<Mpa> findAll() {
-        return findMany("SELECT * FROM MPA");
+        return findMany(FIND_ALL_MPA);
     }
 
     public String findMpaNameById(int id) {
@@ -40,4 +41,3 @@ public class MpaDbService extends BaseRepository<Mpa> {
             throw new ValidationException("MPA с id " + id + " не существует");
     }
 }
-

@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
 
@@ -17,10 +16,10 @@ import java.util.List;
 public class GenreDbService extends BaseRepository<Genre> {
 
     private static final String FIND_GENRE_BY_ID = "SELECT * FROM GENRES WHERE GENRE_ID = ?";
-
     private static final String FIND_GENRES_BY_FILM_ID = "SELECT FILMS_GENRES.GENRE_ID AS GENRE_ID, " +
             "GENRES.GENRE_NAME AS GENRE_NAME FROM FILMS_GENRES LEFT JOIN GENRES ON GENRES.GENRE_ID = " +
             "FILMS_GENRES.GENRE_ID WHERE FILMS_GENRES.FILM_ID = ? ORDER BY FILMS_GENRES.GENRE_ID;";
+    private static final String FIND_ALL_GENRES = "SELECT * FROM GENRES";
 
     public GenreDbService(JdbcTemplate jdbc, RowMapper<Genre> mapper) {
         super(jdbc, mapper);
@@ -34,8 +33,9 @@ public class GenreDbService extends BaseRepository<Genre> {
     public List<Genre> findGenresByFilmId(Long filmId) {
         return findMany(FIND_GENRES_BY_FILM_ID, filmId);
     }
+
     public List<Genre> findAll() {
-        return findMany("SELECT * FROM GENRES");
+        return findMany(FIND_ALL_GENRES);
     }
 
     public String findGenreNameById(int id) {

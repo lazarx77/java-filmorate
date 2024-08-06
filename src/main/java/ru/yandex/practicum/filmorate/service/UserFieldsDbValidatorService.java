@@ -8,34 +8,24 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Map;
-
 @Slf4j
 public class UserFieldsDbValidatorService extends BaseRepository<User> {
 
     private static final String FIND_BY_EMAIL = "SELECT * FROM USERS WHERE EMAIL =?";
+    private static final String FIND_BY_LOGIN = "SELECT * FROM USERS WHERE LOGIN =?";
+    private static final String FIND_BY_ID = "SELECT * FROM USERS WHERE USER_ID =?";
+    private static final String FIND_BY_EMAIL_AND_USER_ID = "SELECT * FROM USERS WHERE EMAIL = ? AND USER_ID != ?";
 
     public UserFieldsDbValidatorService(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
     }
 
-//    public static void emailDoubleValidator(User user, Map<Long, User> users) {
-//        for (Long id : users.keySet()) {
-//            User middleUser = users.get(id);
-//            if (user.getEmail().equals(middleUser.getEmail())) {
-//                throw new ValidationException("Этот имейл уже используется");
-//            }
-//        }
-//    }
-
     public void checkUserFieldsOnUpdate(User updatedUser) {
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
-        if (findOne("SELECT * FROM USERS WHERE USER_ID = ?", updatedUser.getId()).isEmpty()) {
+        if (findOne(FIND_BY_ID, updatedUser.getId()).isEmpty()) {
             throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
         }
-
-        String sql = "SELECT * FROM USERS WHERE EMAIL = ? AND USER_ID != ?";
-        if (findOne(sql, updatedUser.getEmail(), updatedUser.getId()).isPresent()) {
+        if (findOne(FIND_BY_EMAIL_AND_USER_ID, updatedUser.getEmail(), updatedUser.getId()).isPresent()) {
             throw new ValidationException("Этот имейл " + updatedUser.getEmail() + " уже используется");
         }
     }
@@ -46,7 +36,6 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
         if (findOne(FIND_BY_EMAIL, user.getEmail()).isPresent()) {
             throw new ValidationException("Этот имейл " + user.getEmail() + " уже используется");
         }
-        String FIND_BY_LOGIN = "SELECT * FROM USERS WHERE LOGIN = ?";
         if (findOne(FIND_BY_LOGIN, user.getLogin()).isPresent()) {
             throw new ValidationException("Пользователь с таким логином " + user.getLogin() + " уже существует.");
         }
