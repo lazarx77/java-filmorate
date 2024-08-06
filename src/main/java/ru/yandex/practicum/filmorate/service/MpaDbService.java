@@ -11,6 +11,14 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
 
+/**
+ * Сервис для работы с рейтингами фильмов (MPA) в базе данных.
+ * <p>
+ * Данный класс наследуется от BaseRepository и предоставляет методы
+ * для получения информации о рейтингах, включая поиск по идентификатору
+ * и получение всех рейтингов.
+ * </p>
+ */
 @Slf4j
 @Repository
 public class MpaDbService extends BaseRepository<Mpa> {
@@ -22,19 +30,44 @@ public class MpaDbService extends BaseRepository<Mpa> {
         super(jdbc, mapper);
     }
 
+    /**
+     * Находит рейтинг по его идентификатору.
+     *
+     * @param id Идентификатор рейтинга, который необходимо найти.
+     * @return Объект Mpa, соответствующий указанному идентификатору.
+     * @throws NotFoundException Если рейтинг с указанным идентификатором не найден.
+     */
     public Mpa findById(int id) {
         return findOne(FIND_BY_ID, id)
                 .orElseThrow(() -> new NotFoundException("MPA " + id + " not found"));
     }
 
+    /**
+     * Находит все рейтинги в базе данных.
+     *
+     * @return Список всех объектов Mpa.
+     */
     public List<Mpa> findAll() {
         return findMany(FIND_ALL_MPA);
     }
 
+    /**
+     * Находит название рейтинга по его идентификатору.
+     *
+     * @param id Идентификатор рейтинга, название которого необходимо найти.
+     * @return Название рейтинга в виде строки.
+     * @throws NotFoundException Если рейтинг с указанным идентификатором не найден.
+     */
     public String findMpaNameById(int id) {
         return findById(id).getName();
     }
 
+    /**
+     * Проверяет существование рейтинга по его идентификатору.
+     *
+     * @param id Идентификатор рейтинга, который необходимо проверить.
+     * @throws ValidationException Если рейтинг с указанным идентификатором не существует.
+     */
     public void checkMpaId(int id) {
         log.info("Проверка id MPA; {}", id);
         if (findOne(FIND_BY_ID, id).isEmpty())

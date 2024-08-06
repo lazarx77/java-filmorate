@@ -8,6 +8,14 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+
+/**
+ * Сервис для валидации полей пользователя в базе данных.
+ * <p>
+ * Данный класс наследуется от BaseRepository и предоставляет методы
+ * для проверки корректности данных пользователя при его создании и обновлении.
+ * </p>
+ */
 @Slf4j
 public class UserFieldsDbValidatorService extends BaseRepository<User> {
 
@@ -20,6 +28,20 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
         super(jdbc, mapper);
     }
 
+    /**
+     * Проверяет корректность полей пользователя при его обновлении.
+     * <p>
+     * Метод проверяет, существует ли пользователь с указанным идентификатором.
+     * Если пользователь не найден, выбрасывается NotFoundException.
+     * Если указанный email уже используется другим пользователем, выбрасывается
+     * ValidationException.
+     * </p>
+     *
+     * @param updatedUser Объект User, содержащий обновленные данные пользователя.
+     *                    Не должен быть null.
+     * @throws NotFoundException  Если пользователь с указанным идентификатором не найден.
+     * @throws ValidationException Если email уже используется другим пользователем.
+     */
     public void checkUserFieldsOnUpdate(User updatedUser) {
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
         if (findOne(FIND_BY_ID, updatedUser.getId()).isEmpty()) {
@@ -30,6 +52,18 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Проверяет корректность полей пользователя при его создании.
+     * <p>
+     * Метод проверяет, существует ли пользователь с указанным email или логином.
+     * Если email уже используется, выбрасывается ValidationException.
+     * Если логин уже используется, выбрасывается ValidationException.
+     * </p>
+     *
+     * @param user Объект User, содержащий данные нового пользователя.
+     *             Не должен быть null.
+     * @throws ValidationException Если email или логин уже используются другими пользователями.
+     */
     public void checkUserFieldsOnCreate(User user) {
         log.info("Проверка полей пользователя при его создании; {}", user.getLogin());
         findOne(FIND_BY_EMAIL, user.getEmail());

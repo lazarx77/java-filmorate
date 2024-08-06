@@ -11,6 +11,14 @@ import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
 
+/**
+ * Сервис для работы с жанрами фильмов в базе данных.
+ * <p>
+ * Данный класс наследуется от BaseRepository и предоставляет методы
+ * для получения информации о жанрах, включая поиск по идентификатору,
+ * получение жанров по идентификатору фильма и получение всех жанров.
+ * </p>
+ */
 @Slf4j
 @Repository
 public class GenreDbService extends BaseRepository<Genre> {
@@ -25,23 +33,55 @@ public class GenreDbService extends BaseRepository<Genre> {
         super(jdbc, mapper);
     }
 
+    /**
+     * Находит жанр по его идентификатору.
+     *
+     * @param id Идентификатор жанра, который необходимо найти.
+     * @return Объект Genre, соответствующий указанному идентификатору.
+     * @throws NotFoundException Если жанр с указанным идентификатором не найден.
+     */
     public Genre findById(int id) {
         return findOne(FIND_GENRE_BY_ID, id)
-                .orElseThrow(() -> new NotFoundException("Genre " + id + " not found"));
+                .orElseThrow(() -> new NotFoundException("Жанр с id " + id + " не найден"));
     }
 
+    /**
+     * Находит все жанры, связанные с указанным идентификатором фильма.
+     *
+     * @param filmId Идентификатор фильма, для которого необходимо найти жанры.
+     * @return Список объектов Genre, связанных с указанным фильмом.
+     */
     public List<Genre> findGenresByFilmId(Long filmId) {
         return findMany(FIND_GENRES_BY_FILM_ID, filmId);
     }
 
+
+    /**
+     * Находит все жанры в базе данных.
+     *
+     * @return Список всех объектов Genre.
+     */
     public List<Genre> findAll() {
         return findMany(FIND_ALL_GENRES);
     }
 
+    /**
+     * Находит название жанра по его идентификатору.
+     *
+     * @param id Идентификатор жанра, название которого необходимо найти.
+     * @return Название жанра в виде строки.
+     * @throws NotFoundException Если жанр с указанным идентификатором не найден.
+     */
     public String findGenreNameById(int id) {
         return findById(id).getName();
     }
 
+    /**
+     * Проверяет существование жанра по его идентификатору.
+     *
+     * @param id Идентификатор жанра, который необходимо проверить.
+     * @throws ValidationException Если жанр с указанным идентификатором не существует.
+     */
     public void checkGenreId(int id) {
         log.info("Проверка id жанра; {}", id);
         if (findAll().stream().noneMatch(genre -> genre.getId() == id))

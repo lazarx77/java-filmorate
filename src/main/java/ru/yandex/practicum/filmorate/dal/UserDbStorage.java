@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.dal;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -18,11 +17,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Репозиторий для работы с пользователями в базе данных.
+ * Реализует интерфейс UserStorage и предоставляет методы для выполнения операций CRUD с пользователями.
+ */
 @Slf4j
 @Repository
 @Qualifier("UserDbStorage")
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
+    // SQL-запросы
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM USERS WHERE USER_ID = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM USERS";
     private static final String INSERT_QUERY = "INSERT INTO USERS(USER_NAME, EMAIL, LOGIN, BIRTHDAY)" +
@@ -35,13 +39,23 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID) VALUES (?, ?)";
     private static final String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
 
-    @Autowired
+    /**
+     * Конструктор для инициализации UserDbStorage.
+     *
+     * @param jdbc   JdbcTemplate для выполнения SQL-запросов.
+     * @param mapper RowMapper для преобразования строк результата SQL-запроса в объекты User.
+     */
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
     }
 
     private final UserFieldsDbValidatorService userDbValidator = new UserFieldsDbValidatorService(jdbc, mapper);
 
+    /**
+     * Получает всех пользователей из базы данных.
+     *
+     * @return Список всех пользователей.
+     */
     @Override
     public List<User> getAll() {
         List<User> users = findMany(FIND_ALL_QUERY);
@@ -51,6 +65,12 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return users;
     }
 
+    /**
+     * Создает нового пользователя в базе данных.
+     *
+     * @param user Пользователь, которого нужно создать.
+     * @return Созданный пользователь с установленным идентификатором.
+     */
     @Override
     public User createUser(User user) {
         userDbValidator.checkUserFieldsOnCreate(user);
@@ -65,6 +85,12 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return user;
     }
 
+    /**
+     * Обновляет существующего пользователя в базе данных.
+     *
+     * @param updatedUser Пользователь с обновленными данными.
+     * @return Обновленный пользователь.
+     */
     @Override
     public User update(User updatedUser) {
         log.info("Проверка наличия id пользователя в запросе: {}.", updatedUser.getLogin());
@@ -84,8 +110,14 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return updatedUser;
     }
 
+    /**
+     * Добавляет пользователя в друзья.
+     *
+     * @param userId   Идентификатор пользователя, который добавляет друга.
+     * @param friendId Идентификатор пользователя, который будет добавлен в друзья.
+     * @throws NotFoundException Если один из пользователей не найден.
+     */
     public void addFriend(Long userId, Long friendId) {
-        // Проверка существования пользователей
         log.info("Проверка существования пользователей: {} и {}", userId, friendId);
         findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
                 " не найден"));
@@ -94,6 +126,13 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
     }
 
+    /**
+     * Получает список друзей пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Список друзей пользователя.
+     * @throws NotFoundException Если пользователь не найден.
+     */
     public List<User> getUserFriends(Long id) {
         findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
         List<User> friends = findMany(FIND_FRIENDS_BY_ID, id);
@@ -104,11 +143,23 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     }
 
-    //Вспомогательный метод для получения коллекции друзей пользователя
+    /**
+     * Вспомогательный метод для получения коллекции идентификаторов друзей пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Множество идентификаторов друзей.
+     */
     private Set<Long> getFriendsSet(Long id) {
         return new HashSet<>(findManyInstances(FIND_FRIENDS_IDS, Long.class, id));
     }
 
+    /**
+     * Удаляет пользователя из друзей.
+     *
+     * @param userId   Идентификатор пользователя, который удаляет друга.
+     * @param friendId Идентификатор пользователя, который будет удален из друзей.
+     * @throws NotFoundException Если один из пользователей не найден.
+     */
     public void deleteFriend(Long userId, Long friendId) {
         log.info("Проверка существования пользователей: {} и {}", userId, friendId);
         findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
@@ -118,17 +169,37 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
     }
 
+    /**
+     * Находит пользователя по его идентификатору.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Опциональный пользователь, если найден, иначе пустой Optional.
+     */
     @Override
     public Optional<User> findById(Long id) {
         return findOne(FIND_BY_ID_QUERY, id);
     }
 
+    /**
+     * Получает пользователя по его идентификатору.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Пользователь с указанным идентификатором.
+     * @throws NotFoundException Если пользователь не найден.
+     */
     public User getUserById(Long id) {
         User user = findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
         user.setFriends(getFriendsSet(id));
         return user;
     }
 
+    /**
+     * Получает список общих друзей между двумя пользователями.
+     *
+     * @param userId  Идентификатор первого пользователя.
+     * @param otherId Идентификатор второго пользователя.
+     * @return Список общих друзей.
+     */
     public List<User> getCommonFriends(Long userId, Long otherId) {
         Set<Long> userFriendsSet = getUserById(userId).getFriends();
         Set<Long> otherUserFriendsSet = getUserById(otherId).getFriends();

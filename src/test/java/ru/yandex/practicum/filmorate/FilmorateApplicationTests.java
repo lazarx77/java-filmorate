@@ -27,6 +27,9 @@ import java.util.Set;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * FilmorateApplicationTests - класс для тестирования приложения Filmorate.
+ */
 @JdbcTest
 @AutoConfigureTestDatabase
 @ContextConfiguration(classes = {UserDbStorage.class, UserRowMapper.class,

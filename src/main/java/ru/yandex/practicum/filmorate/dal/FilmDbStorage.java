@@ -21,12 +21,16 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
+/**
+ * Репозиторий для работы с фильмами в базе данных.
+ * Реализует интерфейс FilmStorage и предоставляет методы для выполнения операций CRUD с фильмами.
+ */
 @Slf4j
 @Repository
 @Qualifier("FilmDbStorage")
 public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
+    // SQL-запросы
     private static final String DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
@@ -40,11 +44,18 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
+
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final MpaDbService mpaDbService = new MpaDbService(jdbc, mpaMapper);
     private final GenreDbService genreDbService = new GenreDbService(jdbc, genreMapper);
 
+    /**
+     * Конструктор для инициализации FilmDbStorage.
+     *
+     * @param jdbc JdbcTemplate для выполнения SQL-запросов.
+     * @param mapper RowMapper для преобразования строк результата SQL-запроса в объекты Film.
+     */
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
@@ -52,6 +63,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private final FilmFieldsDbValidatorService filmDbValidator = new FilmFieldsDbValidatorService(jdbc, mapper);
     private final UserDbStorage userDbStorage = new UserDbStorage(jdbc, new UserRowMapper());
 
+
+    /**
+     * Получает все фильмы из базы данных.
+     *
+     * @return Коллекция всех фильмов.
+     */
     @Override
     public Collection<Film> getAll() {
         List<Film> films = findMany(FIND_ALL_FILMS_QUERY);
@@ -65,6 +82,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         return films;
     }
 
+    /**
+     * Добавляет новый фильм в базу данных.
+     *
+     * @param film Фильм, который нужно добавить.
+     * @return Добавленный фильм с установленным идентификатором.
+     */
     @Override
     public Film addFilm(Film film) {
         FieldsValidatorService.validateReleaseDate(film);
@@ -85,9 +108,16 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         log.info("Фильм {} добавлен", film.getName());
+
         return film;
     }
 
+    /**
+     * Обновляет существующий фильм в базе данных.
+     *
+     * @param updatedFilm Фильм с обновленными данными.
+     * @return Обновленный фильм.
+     */
     @Override
     public Film update(Film updatedFilm) {
         log.info("Проверка налиячия Id у фильма при обновлении: {}.", updatedFilm.getName());
@@ -117,11 +147,24 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         return getFilmById(updatedFilm.getId());
     }
 
+    /**
+     * Находит фильм по его идентификатору.
+     *
+     * @param id Идентификатор фильма.
+     * @return Optional фильма, если найден, иначе - пустой Optional.
+     */
     @Override
     public Optional<Film> findById(Long id) {
         return findOne(FIND_FILM_BY_ID_QUERY, id);
     }
 
+    /**
+     * Получает фильм по его идентификатору.
+     *
+     * @param id Идентификатор фильма.
+     * @return Фильм с указанным идентификатором.
+     * @throws NotFoundException Если фильм не найден.
+     */
     public Film getFilmById(Long id) {
         Film film = findById(id).orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
         Set<Genre> genres = film.getGenres();
@@ -134,6 +177,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         return film;
     }
 
+    /**
+     * Добавляет лайк к фильму от пользователя.
+     *
+     * @param filmId Идентификатор фильма, к которому добавляется лайк.
+     * @param userId Идентификатор пользователя, который ставит лайк.
+     * @throws NotFoundException Если фильм или пользователь не найдены.
+     */
     public void addLike(Long filmId, Long userId) {
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
@@ -144,11 +194,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     /**
-     * deleteLike - удаляет лайк пользователя с идентификаторов userId у фильма с идентификатором filmId.
+     * Удаляет лайк пользователя от фильма.
      *
-     * @param filmId идентификатор фильма, у которого удаляется лайк.
-     * @param userId идентификатор пользователя, который удаляет лайк.
-     * @throws NotFoundException если фильм не найден или у фильма нет лайка от пользователя.
+     * @param filmId Идентификатор фильма, у которого удаляется лайк.
+     * @param userId Идентификатор пользователя, который удаляет лайк.
+     * @throws NotFoundException Если фильм не найден или у фильма нет лайка от пользователя.
      */
     public void deleteLike(Long filmId, Long userId) {
         log.info("Проверка существования фильма и пользователя: {} и {}", filmId, userId);
@@ -162,10 +212,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     /**
-     * getMostLiked - возвращает список из count самых популярных фильмов.
+     * Возвращает список самых популярных фильмов.
      *
-     * @param count количество фильмов, которые нужно вернуть.
-     * @return список из count самых популярных фильмов.
+     * @param count Количество фильмов, которые нужно вернуть.
+     * @return Список из count самых популярных фильмов.
      */
     public List<Film> getMostLiked(int count) {
         Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());

@@ -88,6 +88,12 @@ public class FilmController {
         return filmDbStorage.update(updatedFilm);
     }
 
+    /**
+     * getFilmById - получает фильм с указанным id.
+     *
+     * @param id идентификатор фильма
+     * @return объект Film, представляющий фильм
+     */
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable("id") Long id) {
         return filmDbStorage.getFilmById(id);
