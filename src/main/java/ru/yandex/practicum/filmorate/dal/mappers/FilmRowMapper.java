@@ -10,7 +10,7 @@ import java.sql.SQLException;
 
 /**
  * Mapper для преобразования строк результата SQL-запроса в объекты Film.
- * Реализует интерфейс RowMapper, предоставляя метод для маппинга данных из ResultSet.
+ * Реализует интерфейс RowMapper, предоставляя метод для маппинга данных из ResultSet .
  */
 @Component
 public class FilmRowMapper implements RowMapper<Film> {
