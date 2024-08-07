@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate;
 
-import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +55,7 @@ class FilmorateApplicationTests {
         this.mpaDbService = mpaDbService;
     }
 
-     public void addTestFilm() {
+    public void addTestFilm() {
         Set<Genre> genres = new HashSet<>();
         Mpa mpa = new Mpa();
         mpa.setId(1);
@@ -71,7 +70,7 @@ class FilmorateApplicationTests {
         film.setMpa(mpa);
         film.setReleaseDate(LocalDate.of(2019, 1, 1));
         film.setDuration(150L);
-         filmDbService.addFilm(film);
+        filmDbService.addFilm(film);
     }
 
     public void addTestUser() {
