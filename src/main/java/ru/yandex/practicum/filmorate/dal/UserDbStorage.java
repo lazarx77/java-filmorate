@@ -1,14 +1,11 @@
 package ru.yandex.practicum.filmorate.dal;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
-import ru.yandex.practicum.filmorate.service.UserFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.HashSet;
@@ -21,7 +18,6 @@ import java.util.stream.Collectors;
  * Репозиторий для работы с пользователями в базе данных.
  * Реализует интерфейс UserStorage и предоставляет методы для выполнения операций CRUD с пользователями.
  */
-@Slf4j
 @Repository
 @Qualifier("UserDbStorage")
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
@@ -49,8 +45,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         super(jdbc, mapper);
     }
 
-    private final UserFieldsDbValidatorService userDbValidator = new UserFieldsDbValidatorService(jdbc, mapper);
-
     /**
      * Получает всех пользователей из базы данных.
      *
@@ -73,7 +67,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
      */
     @Override
     public User createUser(User user) {
-        userDbValidator.checkUserFieldsOnCreate(user);
         long id = insertWithGenId(
                 INSERT_QUERY,
                 user.getName(),
@@ -93,9 +86,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
      */
     @Override
     public User update(User updatedUser) {
-        log.info("Проверка наличия id пользователя в запросе: {}.", updatedUser.getLogin());
-        FieldsValidatorService.validateUserId(updatedUser);
-        userDbValidator.checkUserFieldsOnUpdate(updatedUser);
         update(
                 UPDATE_QUERY,
                 updatedUser.getName(),
@@ -105,7 +95,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
                 updatedUser.getId()
         );
         updatedUser.setFriends(getFriendsSet(updatedUser.getId()));
-        log.info("Пользователя с именем: {} обновлены.", updatedUser.getName());
 
         return updatedUser;
     }
@@ -118,12 +107,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
      * @throws NotFoundException Если один из пользователей не найден.
      */
     public void addFriend(Long userId, Long friendId) {
-        log.info("Проверка существования пользователей: {} и {}", userId, friendId);
-        findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
-                " не найден"));
-        findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         insert(INSERT_FRIEND_QUERY, userId, friendId);
-        log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
     }
 
     /**
@@ -134,7 +118,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
      * @throws NotFoundException Если пользователь не найден.
      */
     public List<User> getUserFriends(Long id) {
-        findById(id).orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
         List<User> friends = findMany(FIND_FRIENDS_BY_ID, id);
         for (User friend : friends) {
             friend.setFriends(getFriendsSet(friend.getId()));
@@ -161,12 +144,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
      * @throws NotFoundException Если один из пользователей не найден.
      */
     public void deleteFriend(Long userId, Long friendId) {
-        log.info("Проверка существования пользователей: {} и {}", userId, friendId);
-        findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id " + userId +
-                " не найден"));
-        findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         deleteByTwoIds(DELETE_FRIEND_QUERY, userId, friendId);
-        log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
     }
 
     /**

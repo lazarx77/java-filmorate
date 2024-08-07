@@ -4,9 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserDbService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -26,7 +26,8 @@ public class UserController {
 
     private final UserStorage userStorage;
     private final UserService userService;
-    private final UserDbStorage userDbStorage;
+    //    private final UserDbStorage userDbStorage;
+    private final UserDbService userDbService;
 
     /**
      * getAll - получает список всех пользователей.
@@ -35,7 +36,7 @@ public class UserController {
      */
     @GetMapping
     public Collection<User> getAll() {
-        return userDbStorage.getAll();
+        return userDbService.getAll();
     }
 
 
@@ -48,7 +49,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public User findById(@PathVariable("id") long id) {
-        return userDbStorage.getUserById(id);
+        return userDbService.getUserById(id);
     }
 
     /**
@@ -60,7 +61,7 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User createUser(@Valid @RequestBody User user) {
-        return userDbStorage.createUser(user);
+        return userDbService.createUser(user);
     }
 
     /**
@@ -71,7 +72,7 @@ public class UserController {
      */
     @PutMapping
     public User update(@Valid @RequestBody User updatedUser) {
-        return userDbStorage.update(updatedUser);
+        return userDbService.update(updatedUser);
     }
 
     /**
@@ -82,7 +83,7 @@ public class UserController {
      */
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
-        userDbStorage.addFriend(id, friendId);
+        userDbService.addFriend(id, friendId);
     }
 
     /**
@@ -94,7 +95,7 @@ public class UserController {
      */
     @DeleteMapping("/{id}/friends/{friendId}")
     public void deleteFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
-        userDbStorage.deleteFriend(id, friendId);
+        userDbService.deleteFriend(id, friendId);
     }
 
     /**
@@ -105,7 +106,7 @@ public class UserController {
      */
     @GetMapping("/{id}/friends")
     public List<User> getUserFriends(@PathVariable("id") long id) {
-        return userDbStorage.getUserFriends(id);
+        return userDbService.getUserFriends(id);
     }
 
     /**
@@ -117,7 +118,6 @@ public class UserController {
      */
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable("id") long id, @PathVariable("otherId") long otherId) {
-        return userDbStorage.getCommonFriends(id, otherId);
+        return userDbService.getCommonFriends(id, otherId);
     }
-
 }

@@ -7,19 +7,17 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 import ru.yandex.practicum.filmorate.service.FilmFieldsDbValidatorService;
 import ru.yandex.practicum.filmorate.service.GenreDbService;
+import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
 import ru.yandex.practicum.filmorate.service.MpaDbService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Репозиторий для работы с фильмами в базе данных.
@@ -47,13 +45,14 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
-    private final MpaDbService mpaDbService = new MpaDbService(jdbc, mpaMapper);
-    private final GenreDbService genreDbService = new GenreDbService(jdbc, genreMapper);
+    private final MpaDbService mpaDbService = new MpaDbService(new MpaDbStorage(jdbc, mpaMapper));
+    private final GenreFieldsDbValidator genreDbValidator = new GenreFieldsDbValidator(jdbc, genreMapper);
+    private final GenreDbService genreDbService = new GenreDbService(new GenreDbStorage(jdbc, genreMapper));
 
     /**
      * Конструктор для инициализации FilmDbStorage.
      *
-     * @param jdbc JdbcTemplate для выполнения SQL-запросов.
+     * @param jdbc   JdbcTemplate для выполнения SQL-запросов.
      * @param mapper RowMapper для преобразования строк результата SQL-запроса в объекты Film.
      */
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -61,8 +60,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     private final FilmFieldsDbValidatorService filmDbValidator = new FilmFieldsDbValidatorService(jdbc, mapper);
-    private final UserDbStorage userDbStorage = new UserDbStorage(jdbc, new UserRowMapper());
-
 
     /**
      * Получает все фильмы из базы данных.
@@ -90,15 +87,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      */
     @Override
     public Film addFilm(Film film) {
-        log.info("Добавляем фильм: {}", film.getName());
-        FieldsValidatorService.validateReleaseDate(film);
-        mpaDbService.checkMpaId(film.getMpa().getId());
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
                 film.getDescription(), film.getMpa().getId());
         Set<Genre> genres = film.getGenres();
         if (genres != null) {
             for (Genre genre : genres) {
-                genreDbService.checkGenreId(genre.getId());
+                genreDbValidator.checkGenreId(genre.getId());
             }
             for (Genre genre : genres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
@@ -108,7 +102,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
-        log.info("Фильм {} добавлен", film.getName());
 
         return film;
     }
@@ -121,16 +114,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      */
     @Override
     public Film update(Film updatedFilm) {
-        log.info("Проверка налиячия Id у фильма при обновлении: {}.", updatedFilm.getName());
-        FieldsValidatorService.validateFilmId(updatedFilm);
-        log.info("Проверка даты выпуска фильма при обновлении: {}.", updatedFilm.getName());
-        FieldsValidatorService.validateReleaseDate(updatedFilm);
-        log.info("Проверка полей фильма при обновлении: {}.", updatedFilm.getName());
-        mpaDbService.checkMpaId(updatedFilm.getMpa().getId());
         Set<Genre> genres = updatedFilm.getGenres();
         if (genres != null) {
             for (Genre genre : genres) {
-                genreDbService.checkGenreId(genre.getId());
+                genreDbValidator.checkGenreId(genre.getId());
             }
             delete(DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
             for (Genre genre : genres) {
@@ -186,14 +173,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      * @throws NotFoundException Если фильм или пользователь не найдены.
      */
     public void addLike(Long filmId, Long userId) {
-        log.info("Проверка существования пользователя с Id {} при добавлении like.", userId);
-        userDbStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-        log.info("Проверка существования фильма с Id {} при добавлении like.", filmId);
-        findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         insert(INSERT_LIKE_QUERY, filmId, userId);
-        log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
     }
 
     /**
@@ -201,31 +181,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      *
      * @param filmId Идентификатор фильма, у которого удаляется лайк.
      * @param userId Идентификатор пользователя, который удаляет лайк.
-     * @throws NotFoundException Если фильм не найден или у фильма нет лайка от пользователя.
+     * @throws NotFoundException Если фильма нет лайка от пользователя.
      */
     public void deleteLike(Long filmId, Long userId) {
-        log.info("Проверка существования фильма и пользователя: {} и {}", filmId, userId);
-        findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
-        userDbStorage.findById(userId);
         if (findManyInstances(COUNT_LIKES_QUERY, Long.class, filmId, userId).getFirst() == 0) {
             throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
         }
         deleteByTwoIds(DELETE_LIKE_QUERY, filmId, userId);
-        log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
-    }
-
-    /**
-     * Возвращает список самых популярных фильмов.
-     *
-     * @param count Количество фильмов, которые нужно вернуть.
-     * @return Список из count самых популярных фильмов.
-     */
-    public List<Film> getMostLiked(int count) {
-        Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
-        return getAll()
-                .stream()
-                .sorted(comparator)
-                .limit(count)
-                .collect(Collectors.toList());
     }
 }

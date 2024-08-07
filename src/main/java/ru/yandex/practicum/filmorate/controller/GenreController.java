@@ -5,9 +5,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.dal.GenreDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.service.GenreDbService;
 
 import java.util.Collection;
 
@@ -19,7 +19,7 @@ import java.util.Collection;
 @RequestMapping("/genres")
 @RequiredArgsConstructor
 public class GenreController {
-    private final GenreDbService genreService;
+    private final GenreDbStorage genreService;
 
     /**
      * Получает список всех жанров.

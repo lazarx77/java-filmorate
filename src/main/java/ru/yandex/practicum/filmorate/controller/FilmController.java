@@ -4,8 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmDbService;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmController {
 
-    private final FilmDbStorage filmDbStorage;
+    private final FilmDbService filmDbService;
 
     /**
      * addLike - добавляет лайк фильму с указанным id от пользователя с указанным userId.
@@ -30,7 +30,7 @@ public class FilmController {
      */
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable("id") long id, @PathVariable("userId") long userId) {
-        filmDbStorage.addLike(id, userId);
+        filmDbService.addLike(id, userId);
     }
 
     /**
@@ -41,7 +41,7 @@ public class FilmController {
      */
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable("id") long id, @PathVariable("userId") long userId) {
-        filmDbStorage.deleteLike(id, userId);
+        filmDbService.deleteLike(id, userId);
     }
 
     /**
@@ -53,7 +53,7 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film addFilm(@Valid @RequestBody Film film) {
-        return filmDbStorage.addFilm(film);
+        return filmDbService.addFilm(film);
     }
 
     /**
@@ -64,7 +64,7 @@ public class FilmController {
      */
     @GetMapping("/popular")
     public List<Film> getPopular(@PathVariable("count") @RequestParam(defaultValue = "10") int count) {
-        return filmDbStorage.getMostLiked(count);
+        return filmDbService.getMostLiked(count);
     }
 
     /**
@@ -74,7 +74,7 @@ public class FilmController {
      */
     @GetMapping
     public Collection<Film> getAll() {
-        return filmDbStorage.getAll();
+        return filmDbService.getAll();
     }
 
     /**
@@ -85,7 +85,7 @@ public class FilmController {
      */
     @PutMapping
     public Film update(@Valid @RequestBody Film updatedFilm) {
-        return filmDbStorage.update(updatedFilm);
+        return filmDbService.update(updatedFilm);
     }
 
     /**
@@ -96,6 +96,6 @@ public class FilmController {
      */
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable("id") Long id) {
-        return filmDbStorage.getFilmById(id);
+        return filmDbService.getFilmById(id);
     }
 }

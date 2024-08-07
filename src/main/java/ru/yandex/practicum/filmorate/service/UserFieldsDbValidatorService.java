@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -17,6 +18,7 @@ import ru.yandex.practicum.filmorate.model.User;
  * </p>
  */
 @Slf4j
+@Service
 public class UserFieldsDbValidatorService extends BaseRepository<User> {
 
     private static final String FIND_BY_EMAIL = "SELECT * FROM USERS WHERE EMAIL =?";
@@ -39,10 +41,10 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
      *
      * @param updatedUser Объект User, содержащий обновленные данные пользователя.
      *                    Не должен быть null.
-     * @throws NotFoundException  Если пользователь с указанным идентификатором не найден.
+     * @throws NotFoundException   Если пользователь с указанным идентификатором не найден.
      * @throws ValidationException Если email уже используется другим пользователем.
      */
-    public void checkUserFieldsOnUpdate(User updatedUser) {
+    protected void checkUserFieldsOnUpdate(User updatedUser) {
         log.info("Проверка полей пользователя при его обновлении; {}", updatedUser.getLogin());
         if (findOne(FIND_BY_ID, updatedUser.getId()).isEmpty()) {
             throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
@@ -64,7 +66,7 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
      *             Не должен быть null.
      * @throws ValidationException Если email или логин уже используются другими пользователями.
      */
-    public void checkUserFieldsOnCreate(User user) {
+    protected void checkUserFieldsOnCreate(User user) {
         log.info("Проверка полей пользователя при его создании; {}", user.getLogin());
         findOne(FIND_BY_EMAIL, user.getEmail());
         if (findOne(FIND_BY_EMAIL, user.getEmail()).isPresent()) {
