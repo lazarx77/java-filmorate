@@ -7,14 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.controller.FilmController;
+import org.springframework.test.context.ContextConfiguration;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -27,23 +25,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SpringBootTest
 @Slf4j
+@ContextConfiguration(classes = {Film.class})
 class FilmControllerTests {
     private Film film;
     private Validator validator;
     private final FilmStorage filmStorage = new InMemoryFilmStorage();
-    private final UserStorage userStorage = new InMemoryUserStorage();
-    private final FilmService filmService = new FilmService(filmStorage, userStorage);
-    private final FilmController filmController = new FilmController(filmStorage, filmService);
 
 
     @BeforeEach
     public void beforeEach() {
         validator = Validation.buildDefaultValidatorFactory().getValidator();
+        Mpa mpa = new Mpa();
+        mpa.setId(1);
         film = new Film();
         film.setName("name");
         film.setDescription("description");
         film.setReleaseDate(LocalDate.of(2022, 1, 1));
         film.setDuration(90L);
+        film.setMpa(mpa);
     }
 
     @Test
@@ -72,7 +71,7 @@ class FilmControllerTests {
         String errorMassage = "Дата релиза не может быть раньше дня рождения Кино";
 
         try {
-            filmController.addFilm(film);
+            filmStorage.addFilm(film);
         } catch (ValidationException e) {
             log.error(errorMassage);
         }

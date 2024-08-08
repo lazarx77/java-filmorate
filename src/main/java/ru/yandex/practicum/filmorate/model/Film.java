@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -19,6 +20,8 @@ import java.util.Set;
  * - releaseDate: дата выхода фильма
  * - duration: продолжительность фильма в минутах, не может быть отрицательной
  * - likes: множество идентификаторов пользователей, которым понравился фильм
+ * - mpa: объект типа Mpa, который содержит информацию о рейтинге фильма
+ * - genres: множество жанров, к которым относится фильм
  */
 @Data
 @EqualsAndHashCode(of = {"name", "releaseDate"})
@@ -35,4 +38,8 @@ public class Film {
     private LocalDate releaseDate;
     @Positive(message = "Продолжительность не может быть отрицательной")
     private Long duration;
+    @NotNull(message = "Рейтинг не может быть Null")
+    private Mpa mpa;
+    @NotNull(message = "Поле ЖАНРЫ не может быть Null")
+    private Set<Genre> genres = new HashSet<>();
 }

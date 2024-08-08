@@ -1,5 +1,6 @@
 # java-filmorate
 Filmorate project by O.Lazarenko. Sprint 12.
+
 ![Database project.](/filmorate.png)
 
 # Filmorate

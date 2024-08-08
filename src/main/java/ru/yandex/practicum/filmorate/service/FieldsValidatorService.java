@@ -94,6 +94,7 @@ public class FieldsValidatorService {
         }
     }
 
+
     /**
      * validateUserId проверяет, что у пользователя задан идентификатор.
      *

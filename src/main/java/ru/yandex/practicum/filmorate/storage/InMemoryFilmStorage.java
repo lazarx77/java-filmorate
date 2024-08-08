@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FieldsValidatorService;
 
@@ -18,7 +17,6 @@ import java.util.Optional;
  * При добавлении и обновлении фильмов выполняется проверка корректности данных с помощью сервиса
  * FieldsValidatorService.
  */
-@Component
 @Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
 
