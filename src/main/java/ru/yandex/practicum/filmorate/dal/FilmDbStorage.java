@@ -39,7 +39,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
 
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
-            "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
+            "DURATION = ?, MPA_ID = ?, DIRECTOR_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
     private static final String FIND_FILMS_OF_DIRECTOR = "SELECT * FROM FILMS WHERE DIRECTOR_ID = ?";
@@ -152,13 +152,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
         update(
                 UPDATE_QUERY, updatedFilm.getName(), updatedFilm.getDescription(), updatedFilm.getReleaseDate(),
-                updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId()
+                updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getDirector().getId(), updatedFilm.getId()
         );
-        if (updatedFilm.getDirector() != null) {
-            if (directorDbService.findById(updatedFilm.getDirector().getId()) != null) {
-                updatedFilm.getDirector().setName(directorDbService.findDirectorNameById(updatedFilm.getDirector().getId()));
-            }
-        }
+//        if (updatedFilm.getDirector() != null) {
+//            if (directorDbService.findById(updatedFilm.getDirector().getId()) != null) {
+//                updatedFilm.getDirector().setName(directorDbService.findDirectorNameById(updatedFilm.getDirector().getId()));
+//            }
+//        }
         log.info("Данные фильма с названием: {} обновлены.", updatedFilm.getName());
         return getFilmById(updatedFilm.getId());
     }
