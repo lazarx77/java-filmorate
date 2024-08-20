@@ -139,4 +139,19 @@ public class FilmDbService {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getDirectorFilms(Long id, String sortBy) {
+        Comparator<Film> comparator = switch (sortBy) {
+            case "year" -> Comparator.comparing(Film::getReleaseDate);
+            case "likes" ->
+                    Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+            default -> throw new IllegalArgumentException("Неправильное значение sortBy: " + sortBy);
+        };
+
+        return getAll()
+                .stream()
+                .filter(film -> film.getDirector().getId().equals(id))
+                .sorted(comparator)
+                .collect(Collectors.toList());
+    }
 }

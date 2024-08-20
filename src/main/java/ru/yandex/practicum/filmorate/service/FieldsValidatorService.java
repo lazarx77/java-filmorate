@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -13,7 +14,6 @@ import java.util.Map;
  * FieldsValidatorService - класс для валидации полей фильмов и пользователей.
  * Проверяет корректность данных при создании, обновлении и удалении объектов.
  */
-@Slf4j
 public class FieldsValidatorService {
 
     private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
@@ -146,6 +146,12 @@ public class FieldsValidatorService {
 
         if (updatedUser.getBirthday() == null) {
             updatedUser.setBirthday(oldUser.getBirthday());
+        }
+    }
+
+    public static void validateDirectorId(Director director) {
+        if (director.getId() == null) {
+            throw new ValidationException("Id должен быть указан");
         }
     }
 }

@@ -98,4 +98,9 @@ public class FilmController {
     public Film getFilmById(@PathVariable("id") Long id) {
         return filmDbService.getFilmById(id);
     }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getDirectorFilms(@PathVariable("directorId") Long id, @RequestParam(defaultValue = "year") String sortBy) {
+        return filmDbService.getDirectorFilms(id, sortBy);
+    }
 }

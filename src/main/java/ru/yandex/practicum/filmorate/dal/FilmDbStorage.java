@@ -5,16 +5,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.FilmFieldsDbValidatorService;
-import ru.yandex.practicum.filmorate.service.GenreDbService;
-import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
-import ru.yandex.practicum.filmorate.service.MpaDbService;
+import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
@@ -34,20 +33,28 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
     private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
-            "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
+            "DESCRIPTION, MPA_ID, DIRECTOR_ID) VALUES (?,?,?,?,?,?)";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(FILM_ID, USER_ID) VALUES (?,?)";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
 
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
-            "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
+            "DURATION = ?, MPA_ID = ?, DIRECTOR_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
+    private static final String FIND_FILMS_OF_DIRECTOR = "SELECT * FROM FILMS WHERE DIRECTOR_ID = ?";
 
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
+    private final RowMapper<Director> directorMapper = new DirectorRowMapper();
+
     private final MpaDbService mpaDbService = new MpaDbService(new MpaDbStorage(jdbc, mpaMapper));
     private final GenreFieldsDbValidator genreDbValidator = new GenreFieldsDbValidator(jdbc, genreMapper);
     private final GenreDbService genreDbService = new GenreDbService(new GenreDbStorage(jdbc, genreMapper));
+
+    private final DirectorDbValidatorService directorDbValidatorService = new DirectorDbValidatorService(jdbc, directorMapper);
+
+    private final DirectorDbService directorDbService = new DirectorDbService(new DirectorDbStorage(jdbc,
+            directorMapper), directorDbValidatorService);
 
     /**
      * Конструктор для инициализации FilmDbStorage.
@@ -72,6 +79,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         for (Film film : films) {
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
+            if (directorDbService.findById(film.getDirector().getId()) != null) {
+                film.setDirector(directorDbService.findById(film.getDirector().getId()));
+            }
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
             System.out.println(film);
 
@@ -88,7 +98,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     @Override
     public Film addFilm(Film film) {
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
-                film.getDescription(), film.getMpa().getId());
+                film.getDescription(), film.getMpa().getId(), film.getDirector().getId());
         Set<Genre> genres = film.getGenres();
         if (genres != null) {
             for (Genre genre : genres) {
@@ -102,6 +112,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        if (directorDbService.findById(film.getDirector().getId()) != null) {
+            film.getDirector().setName(directorDbService.findDirectorNameById(film.getDirector().getId()));
+        }
 
         return film;
     }
@@ -125,11 +138,14 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 insert(INSERT_FILM_GENRE_QUERY, updatedFilm.getId(), genre.getId());
             }
         }
+
         filmDbValidator.validateUpdateFilmFields(updatedFilm);
+        directorDbValidatorService.checkDirectorId(updatedFilm.getDirector().getId());
 
         update(
                 UPDATE_QUERY, updatedFilm.getName(), updatedFilm.getDescription(), updatedFilm.getReleaseDate(),
-                updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId()
+                updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getDirector().getId(),
+                updatedFilm.getId()
         );
         log.info("Данные фильма с названием: {} обновлены.", updatedFilm.getName());
         return getFilmById(updatedFilm.getId());
@@ -161,6 +177,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        if (directorDbService.findById(film.getDirector().getId()) != null) {
+            film.getDirector().setName(directorDbService.findDirectorNameById(film.getDirector().getId()));
+        }
         film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(id)));
         return film;
     }
