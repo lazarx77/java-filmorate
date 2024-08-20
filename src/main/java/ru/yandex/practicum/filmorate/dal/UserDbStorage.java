@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -212,8 +211,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     }
 
     public List<Film> getRecommendations(long id) {
-        System.out.println(filmDbStorage.findMany(GET_USER_LIKES_QUERY,id,id,id));
         return filmDbStorage.findMany(GET_USER_LIKES_QUERY,id,id,id);
-
     }
 }
