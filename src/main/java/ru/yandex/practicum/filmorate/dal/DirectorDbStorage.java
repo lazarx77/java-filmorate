@@ -12,7 +12,7 @@ import java.util.List;
 @Qualifier("DirectorDbStorage")
 public class DirectorDbStorage extends BaseRepository<Director> {
 
-    private static final String FIND_ALL_DIRECTORS = "SELECT * FROM DIRECTORS";
+    private static final String FIND_ALL_DIRECTORS = "SELECT * FROM DIRECTORS ORDER BY DIRECTOR_ID";
     private static final String FIND_DIRECTOR_BY_ID = "SELECT * FROM DIRECTORS WHERE DIRECTOR_ID = ?";
     private static final String INSERT_DIRECTOR_QUERY = "INSERT INTO DIRECTORS(DIRECTOR_NAME) VALUES (?)";
     private static final String UPDATE_DIRECTOR_QUERY = "UPDATE DIRECTORS SET DIRECTOR_NAME = ? WHERE DIRECTOR_ID = ?";

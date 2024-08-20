@@ -12,7 +12,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/directors")
 @RequiredArgsConstructor
-public class DirectorHandler {
+public class DirectorController {
 
     private final DirectorDbService directorDbService;
 
