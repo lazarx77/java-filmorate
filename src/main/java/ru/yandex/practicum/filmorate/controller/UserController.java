@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FeedService;
 import ru.yandex.practicum.filmorate.service.UserDbService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -28,6 +30,7 @@ public class UserController {
     private final UserService userService;
     //    private final UserDbStorage userDbStorage;
     private final UserDbService userDbService;
+    private final FeedService feedService;
 
     /**
      * getAll - получает список всех пользователей.
@@ -119,5 +122,9 @@ public class UserController {
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable("id") long id, @PathVariable("otherId") long otherId) {
         return userDbService.getCommonFriends(id, otherId);
+    }
+    @GetMapping("/{id}/feed")
+    public List<Event> getFeed(@PathVariable("id") long id) {
+        return feedService.getFeed(id);
     }
 }
