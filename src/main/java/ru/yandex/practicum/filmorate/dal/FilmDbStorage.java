@@ -114,7 +114,7 @@ private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS
             for (Director director : directors) {
                 directorDbValidatorService.checkDirectorId(director.getId());
             }
-            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, film.getId());
+//            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, film.getId());
             for (Director director : directors) {
                 director.setName(directorDbService.findDirectorNameById(director.getId()));
                 insert(INSERT_FILM_DIRECTOR_QUERY, film.getId(), director.getId());
