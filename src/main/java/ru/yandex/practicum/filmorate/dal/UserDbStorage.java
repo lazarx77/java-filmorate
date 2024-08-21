@@ -55,6 +55,13 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             "        ON f.FILM_ID = l1.FILM_ID \n" +
             "     WHERE l2.film_id IS null\n" +
             "     ORDER BY P.cnt desc";
+    private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE USER_ID = ?";
+    private static final String DELETE_USER_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? OR FRIEND_ID = ?";
+    private static final String DELETE_USER_LIKE_QUERY = "DELETE FROM LIKES WHERE USER_ID = ?";
+    private static final String DELETE_USER_HISTORY_QUERY = "DELETE FROM HISTORY_ACTIONS WHERE USER_ID = ?";
+    private static final String DELETE_USER_EVENT_QUERY = "DELETE FROM HISTORY_ACTIONS " +
+            "WHERE ENTITY_ID = ? AND TYPE = 'FRIEND'";
+    private static final String DELETE_USER_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE USER_ID = ?";
 
     /**
      * Конструктор для инициализации UserDbStorage.
@@ -212,5 +219,14 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     public List<Film> getRecommendations(long id) {
         return filmDbStorage.findMany(GET_USER_LIKES_QUERY, id, id, id);
+    }
+
+    public void deleteUser(long userId) {
+        delete(DELETE_USER_REVIEW_QUERY, userId);
+        delete(DELETE_USER_HISTORY_QUERY, userId);
+        delete(DELETE_USER_EVENT_QUERY, userId);
+        delete(DELETE_USER_LIKE_QUERY, userId);
+        deleteByTwoIds(DELETE_USER_FRIEND_QUERY, userId, userId);
+        delete(DELETE_USER_QUERY, userId);
     }
 }

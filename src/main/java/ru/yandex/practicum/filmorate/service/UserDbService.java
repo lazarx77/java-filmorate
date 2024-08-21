@@ -160,4 +160,9 @@ public class UserDbService {
     public List<Film> getRecommendations(long id) {
         return userDbStorage.getRecommendations(id);
     }
+
+    public void deleteUser(long userId) {
+        userDbStorage.deleteUser(userId);
+        log.info("Пользователь с id {} удален.", userId);
+    }
 }

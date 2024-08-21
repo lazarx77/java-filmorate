@@ -68,7 +68,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "                 INNER JOIN friend_films ff \n" +
             "                    ON ff.film_id = f.FILM_ID \n" +
             "                 ORDER BY u.cnt desc";
-
+    private static final String DELETE_FILM_QUERY = "DELETE FROM FILMS WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_EVENT_QUERY = "DELETE FROM HISTORY_ACTIONS " +
+            "WHERE ENTITY_ID = ? AND TYPE IN('LIKE', 'REVIEW')";
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final MpaDbService mpaDbService = new MpaDbService(new MpaDbStorage(jdbc, mpaMapper));
@@ -222,5 +227,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
         }
         return result;
+    }
+
+    public void deleteFilm(long filmId) {
+        delete(DELETE_FILM_REVIEW_QUERY, filmId);
+        delete(DELETE_FILM_LIKE_QUERY, filmId);
+        delete(DELETE_FILM_EVENT_QUERY, filmId);
+        delete(DELETE_FILM_GENRE_QUERY, filmId);
+        delete(DELETE_FILM_QUERY, filmId);
     }
 }

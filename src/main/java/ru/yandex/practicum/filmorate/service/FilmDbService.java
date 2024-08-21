@@ -170,4 +170,9 @@ public class FilmDbService {
                 .sorted(comparator)
                 .toList();
     }
+
+    public void deleteFilm(long filmId) {
+        filmDbStorage.deleteFilm(filmId);
+        log.info("Фильм с id {} удален.", filmId);
+    }
 }
