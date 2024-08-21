@@ -35,6 +35,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
             "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
 //            ", DIRECTOR_ID) VALUES (?,?,?,?,?,?)";
+private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
+        "DESCRIPTION, MPA_ID, DIRECTOR_ID) VALUES (?,?,?,?,?,?)";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(FILM_ID, USER_ID) VALUES (?,?)";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
 
@@ -80,12 +82,14 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         for (Film film : films) {
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
-            if (film.getDirector() != null && film.getDirector().getId() != 0) {
-                if (directorDbService.findById(film.getDirector().getId()) != null) {
+            if (film.getDirectors() != null ) {
+                if (directorDbService.findById(film.getDirectors().getId()) != null) {
                     film.setDirector(directorDbService.findById(film.getDirector().getId()));
                 }
             }
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+            film.setDirectors(new HashSet<>(directorDbService.findDirectorsByFilmId(film.getId())));
+
             System.out.println(film);
 
         }
@@ -100,8 +104,22 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      */
     @Override
     public Film addFilm(Film film) {
-        long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
-                film.getDescription(), film.getMpa().getId());
+        long id
+//                ;
+//        if (film.getDirectors() != null) {
+//            id = insertWithGenId(INSERT_FILM_QUERY_WITH_DIRECTOR, film.getName(), film.getReleaseDate(), film.getDuration(),
+//                    film.getDescription(), film.getMpa().getId(), film.getDirectors().getId());
+//            film.getDirector().setName(directorDbService.findDirectorNameById(film.getDirector().getId()));
+//
+//        } else {
+//            id
+            = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
+                    film.getDescription(), film.getMpa().getId());
+//        }
+
+
+//        long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
+//                film.getDescription(), film.getMpa().getId());
         Set<Genre> genres = film.getGenres();
         if (genres != null) {
             for (Genre genre : genres) {
@@ -115,11 +133,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
-        if (film.getDirector() != null && film.getDirector().getId() != 0) {
-            if (directorDbService.findById(film.getDirector().getId()) != null) {
-                film.getDirector().setName(directorDbService.findDirectorNameById(film.getDirector().getId()));
-            }
-        }
+//        if (film.getDirector() != null && film.getDirector().getId() != 0) {
+//            if (directorDbService.findById(film.getDirector().getId()) != null) {
+//                film.getDirector().setName(directorDbService.findDirectorNameById(film.getDirector().getId()));
+//            }
+//        }
 
         return film;
     }
@@ -144,16 +162,20 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             }
         }
 
-        filmDbValidator.validateUpdateFilmFields(updatedFilm);
-        if (updatedFilm.getDirector() != null) {
-            directorDbValidatorService.checkDirectorId(updatedFilm.getDirector().getId());
-        }
+
 
         update(
                 UPDATE_QUERY, updatedFilm.getName(), updatedFilm.getDescription(), updatedFilm.getReleaseDate(),
                 updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId()
         );
-//        if (updatedFilm.getDirector() != null) {
+
+        filmDbValidator.validateUpdateFilmFields(updatedFilm);
+        if (updatedFilm.getDirector() != null && updatedFilm.getDirector().getId() != 0) {
+            directorDbValidatorService.checkDirectorId(updatedFilm.getDirector().getId());
+            updatedFilm.getDirector().setName(directorDbService.findDirectorNameById(updatedFilm.getDirector().getId()));
+            update ("UPDATE FILMS SET DIRECTOR_ID = ? WHERE FILM_ID = ?", updatedFilm.getDirector().getId(), updatedFilm.getId() );
+        }
+//        if (updatedFilm.getDirector() != null && updatedFilm.getDirector().getId() != 0) {
 //            if (directorDbService.findById(updatedFilm.getDirector().getId()) != null) {
 //                updatedFilm.getDirector().setName(directorDbService.findDirectorNameById(updatedFilm.getDirector().getId()));
 //            }

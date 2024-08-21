@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
 
@@ -48,5 +49,9 @@ public class DirectorDbService {
         findById(id);
         directorDbStorage.delete(id);
         log.info("Режиссер с id {} удален.", id);
+    }
+
+    public List<Director> findDirectorsByFilmId(Long filmId) {
+        return directorDbStorage.findDirectorsByFilmId(filmId);
     }
 }

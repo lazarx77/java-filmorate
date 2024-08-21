@@ -43,10 +43,5 @@ public class FilmFieldsDbValidatorService extends BaseRepository<Film> {
         if (findOne(FIND_BY_ID, updatedFilm.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id = " + updatedFilm.getId() + " не найден");
         }
-
-        if (findOne(FIND_BY_ID, updatedFilm.getId()).get().equals(updatedFilm)) {
-            throw new ValidationException("Фильм с таким именем " + updatedFilm.getName() + "и датой релиза " +
-                    updatedFilm.getReleaseDate() + " уже есть в картотеке.");
-        }
     }
 }

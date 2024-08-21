@@ -5,9 +5,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Mpa;
+
+import java.io.NotActiveException;
 
 @Slf4j
 @Service
@@ -33,7 +36,7 @@ public class DirectorDbValidatorService extends BaseRepository<Director> {
     public void checkDirectorId(Long id) {
         log.info("Проверка id режиссера; {}", id);
         if (findOne(FIND_BY_ID, id).isEmpty())
-            throw new ValidationException("Режиссер с id " + id + " не существует");
+            throw new NotFoundException("Режиссер с id " + id + " не существует");
     }
 
 
