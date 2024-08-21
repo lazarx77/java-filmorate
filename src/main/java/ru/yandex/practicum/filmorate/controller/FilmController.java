@@ -103,4 +103,8 @@ public class FilmController {
     public List<Film> getDirectorFilms(@PathVariable("directorId") Long id, @RequestParam(defaultValue = "year") String sortBy) {
         return filmDbService.getDirectorFilms(id, sortBy);
     }
+
+//    @PostMapping
+
+
 }

@@ -38,7 +38,8 @@ public class FilmRowMapper implements RowMapper<Film> {
         film.setMpa(mpa);
 
         Director director = new Director();
-        director.setId(resultSet.getLong("DIRECTOR_ID"));
+        director
+                .setId(resultSet.getLong("DIRECTOR_ID"));
         film.setDirector(director);
 
         return film;

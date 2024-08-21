@@ -39,7 +39,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
 
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
-            "DURATION = ?, MPA_ID = ?, DIRECTOR_ID = ? WHERE FILM_ID = ?";
+            "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
     private static final String FIND_FILMS_OF_DIRECTOR = "SELECT * FROM FILMS WHERE DIRECTOR_ID = ?";
@@ -102,7 +102,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public Film addFilm(Film film) {
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
                 film.getDescription(), film.getMpa().getId());
-//        , film.getDirector().getId());
         Set<Genre> genres = film.getGenres();
         if (genres != null) {
             for (Genre genre : genres) {
@@ -113,10 +112,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 insert(INSERT_FILM_GENRE_QUERY, id, genre.getId());
             }
         }
+        film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
-        if (film.getDirector() != null) {
-            film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        if (film.getDirector() != null && film.getDirector().getId() != 0) {
             if (directorDbService.findById(film.getDirector().getId()) != null) {
                 film.getDirector().setName(directorDbService.findDirectorNameById(film.getDirector().getId()));
             }
@@ -152,7 +151,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
         update(
                 UPDATE_QUERY, updatedFilm.getName(), updatedFilm.getDescription(), updatedFilm.getReleaseDate(),
-                updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getDirector().getId(), updatedFilm.getId()
+                updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId()
         );
 //        if (updatedFilm.getDirector() != null) {
 //            if (directorDbService.findById(updatedFilm.getDirector().getId()) != null) {
