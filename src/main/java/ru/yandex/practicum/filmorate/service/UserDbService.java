@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.enums.EventTypes;
 import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,7 +84,7 @@ public class UserDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .EventType(EventTypes.FRIEND)
+                .eventTypes(EventTypes.FRIEND)
                 .operation(OperationTypes.ADD)
                 .entityId(friendId)
                 .build());
@@ -120,7 +119,7 @@ public class UserDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .EventType(EventTypes.FRIEND)
+                .eventTypes(EventTypes.FRIEND)
                 .operation(OperationTypes.REMOVE)
                 .entityId(friendId)
                 .build());

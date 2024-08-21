@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.enums.EventTypes;
 import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 
-import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -117,7 +116,7 @@ public class FilmDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .EventType(EventTypes.LIKE)
+                .eventTypes(EventTypes.LIKE)
                 .operation(OperationTypes.ADD)
                 .entityId(filmId)
                 .build());
@@ -139,7 +138,7 @@ public class FilmDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .EventType(EventTypes.LIKE)
+                .eventTypes(EventTypes.LIKE)
                 .operation(OperationTypes.REMOVE)
                 .entityId(filmId)
                 .build());

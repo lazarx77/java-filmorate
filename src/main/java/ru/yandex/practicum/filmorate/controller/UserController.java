@@ -129,6 +129,13 @@ public class UserController {
     public List<Film> getRecommendations(@PathVariable("id") long id) {
         return userDbService.getRecommendations(id);
     }
+
+    /**
+     * getFeed - получает список действий пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Список действия пользователя.
+     */
     @GetMapping("/{id}/feed")
     public List<Event> getFeed(@PathVariable("id") long id) {
         return feedService.getFeed(id);
