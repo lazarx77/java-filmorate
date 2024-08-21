@@ -31,7 +31,15 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
     private static final String DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
-    private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
+//    private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
+    private static final String FIND_FILM_BY_ID_QUERY = "SELECT f.FILM_ID, f.FILM_NAME, f.DESCRIPTION," +
+        " f.RELEASE_DATE, f.DURATION, f.MPA_ID, d.DIRECTOR_ID, d.DIRECTOR_NAME FROM FILMS f JOIN FILMS_DIRECTORS fd" +
+        " ON f.FILM_ID = fd.FILM_ID JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID WHERE f.FILM_ID = ?";
+
+
+
+
+
     private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
             "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";

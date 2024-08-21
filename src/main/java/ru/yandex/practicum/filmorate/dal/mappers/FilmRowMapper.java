@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
 
 /**
  * Mapper для преобразования строк результата SQL-запроса в объекты Film.
@@ -36,6 +37,11 @@ public class FilmRowMapper implements RowMapper<Film> {
         Mpa mpa = new Mpa();
         mpa.setId(resultSet.getInt("MPA_ID"));
         film.setMpa(mpa);
+
+        Director director = new Director();
+        director.setId(resultSet.getLong("DIRECTOR_ID"));
+        Set<Director> directors = Set.of(director);
+        film.setDirectors(directors);
 
         return film;
     }
