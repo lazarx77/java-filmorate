@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Event;
 
 import java.util.Collection;
+
 @Slf4j
 @Repository
 public class HistoryDbStorage extends BaseRepository<Event> {
