@@ -248,8 +248,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     public List<Film> getCommonFilms(long userId, long friendId) {
-        List<Film> result = super.findMany(COMMON_FILMS_QUERY,userId,friendId);
-        for (Film film: result) {
+        List<Film> result = super.findMany(COMMON_FILMS_QUERY, userId, friendId);
+        for (Film film : result) {
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
         }
         return result;

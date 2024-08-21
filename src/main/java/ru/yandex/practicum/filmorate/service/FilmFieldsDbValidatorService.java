@@ -36,7 +36,7 @@ public class FilmFieldsDbValidatorService extends BaseRepository<Film> {
      *
      * @param updatedFilm Объект Film, содержащий обновленные данные фильма.
      *                    Не должен быть null.
-     * @throws NotFoundException  Если фильм с указанным идентификатором не найден.
+     * @throws NotFoundException   Если фильм с указанным идентификатором не найден.
      * @throws ValidationException Если фильм с таким именем и датой релиза уже существует в базе данных.
      */
     public void validateUpdateFilmFields(Film updatedFilm) {

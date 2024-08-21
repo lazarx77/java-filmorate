@@ -5,7 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.HistoryDbStorage;
 import ru.yandex.practicum.filmorate.model.Event;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor

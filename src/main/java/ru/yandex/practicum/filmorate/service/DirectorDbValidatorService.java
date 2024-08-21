@@ -8,9 +8,6 @@ import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Mpa;
-
-import java.io.NotActiveException;
 
 @Slf4j
 @Service
