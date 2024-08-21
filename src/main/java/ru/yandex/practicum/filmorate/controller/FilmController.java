@@ -99,12 +99,15 @@ public class FilmController {
         return filmDbService.getFilmById(id);
     }
 
+    /**
+     * getDirectorFilms - возвращает список фильмов одного режиссера, отсортированный по указанному параметру.
+     *
+     * @param id     идентификатор режиссера
+     * @param sortBy параметр сортировки (по умолчанию "year")
+     * @return список фильмов одного режиссера, отсортированный по указанному параметру
+     */
     @GetMapping("/director/{directorId}")
     public List<Film> getDirectorFilms(@PathVariable("directorId") Long id, @RequestParam(defaultValue = "year") String sortBy) {
         return filmDbService.getDirectorFilms(id, sortBy);
     }
-
-//    @PostMapping
-
-
 }

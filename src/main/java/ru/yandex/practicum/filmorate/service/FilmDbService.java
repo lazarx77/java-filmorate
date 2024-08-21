@@ -140,20 +140,41 @@ public class FilmDbService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Получает список фильмов, связанных с указанным режиссером, отсортированный по заданному критерию.
+     * <p>
+     * Этот метод фильтрует все доступные фильмы, оставляя только те, которые связаны с режиссером
+     * с указанным идентификатором. После фильтрации список фильмов сортируется в соответствии с
+     * параметром `sortBy`, который определяет критерий сортировки.
+     * <p>
+     * Доступные критерии сортировки:
+     * - "year": сортировка по дате выхода фильма (по возрастанию).
+     * - "likes": сортировка по количеству лайков (по убыванию).
+     * <p>
+     * Если передано недопустимое значение для параметра `sortBy`, будет выброшено исключение
+     * {@link IllegalArgumentException}.
+     *
+     * @param id     Идентификатор режиссера, для которого необходимо получить список фильмов.
+     * @param sortBy Критерий сортировки списка фильмов. Может принимать значения "year" или "likes".
+     * @return Список объектов {@link Film}, связанных с указанным режиссером, отсортированный
+     * в соответствии с заданным критерием.
+     * @throws IllegalArgumentException Если параметр sortBy имеет недопустимое значение.
+     */
     public List<Film> getDirectorFilms(Long id, String sortBy) {
         Comparator<Film> comparator = switch (sortBy) {
             case "year" -> Comparator.comparing(Film::getReleaseDate);
-            case "likes" ->
-                    Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+            case "likes" -> Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
             default -> throw new IllegalArgumentException("Неправильное значение sortBy: " + sortBy);
         };
 
         return getAll()
                 .stream()
-                .filter(film -> film.getDirectors().stream().findFirst()
-                        .orElseThrow(() -> new NotFoundException("У фильма с id " + id + " не указан режиссер"))
-                        .getId()
-                        .equals(id))
+                .filter(film -> {
+                    if (film.getDirectors().isEmpty()) {
+                        return false;
+                    }
+                    return film.getDirectors().iterator().next().getId().equals(id);
+                })
                 .sorted(comparator)
                 .collect(Collectors.toList());
     }

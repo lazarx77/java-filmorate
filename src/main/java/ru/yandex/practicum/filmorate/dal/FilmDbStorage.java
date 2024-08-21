@@ -32,28 +32,16 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
-//    private static final String FIND_FILM_BY_ID_QUERY = "SELECT f.FILM_ID, f.FILM_NAME, f.DESCRIPTION," +
-//        " f.RELEASE_DATE, f.DURATION, f.MPA_ID, d.DIRECTOR_ID, d.DIRECTOR_NAME FROM FILMS f JOIN FILMS_DIRECTORS fd" +
-//        " ON f.FILM_ID = fd.FILM_ID JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID WHERE f.FILM_ID = ?";
-
-
-
-
-
     private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
             "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
-private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
-        "DESCRIPTION, MPA_ID, DIRECTOR_ID) VALUES (?,?,?,?,?,?)";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(FILM_ID, USER_ID) VALUES (?,?)";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
     private static final String INSERT_FILM_DIRECTOR_QUERY = "INSERT INTO FILMS_DIRECTORS(FILM_ID, DIRECTOR_ID) VALUES (?,?)";
-
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
-    private static final String FIND_FILMS_OF_DIRECTOR = "SELECT * FROM FILMS WHERE DIRECTOR_ID = ?";
 
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
@@ -127,9 +115,9 @@ private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS
                 insert(INSERT_FILM_DIRECTOR_QUERY, id, director.getId());
             }
         }
-            film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
-            film.setId(id);
-            film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
+        film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        film.setId(id);
+        film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
 
         return film;
     }
@@ -200,9 +188,9 @@ private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         Set<Director> directors = new HashSet<>(directorDbService.findDirectorsByFilmId(id));
-            for (Director director : directors) {
-                director.setName(directorDbService.findDirectorNameById(director.getId()));
-            }
+        for (Director director : directors) {
+            director.setName(directorDbService.findDirectorNameById(director.getId()));
+        }
         film.setDirectors(directors);
         film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(id)));
         return film;

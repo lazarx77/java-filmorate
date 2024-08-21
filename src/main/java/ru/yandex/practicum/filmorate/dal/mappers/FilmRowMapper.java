@@ -2,13 +2,11 @@ package ru.yandex.practicum.filmorate.dal.mappers;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Set;
 
 /**
  * Mapper для преобразования строк результата SQL-запроса в объекты Film.
@@ -21,7 +19,7 @@ public class FilmRowMapper implements RowMapper<Film> {
      * Преобразует строку результата SQL-запроса в объект Film.
      *
      * @param resultSet Результат SQL-запроса, содержащий данные о фильме.
-     * @param rowNum Номер строки в результате запроса (начиная с 0).
+     * @param rowNum    Номер строки в результате запроса (начиная с 0).
      * @return Объект Film, созданный на основе данных из ResultSet.
      * @throws SQLException Если возникает ошибка при доступе к данным в ResultSet.
      */
@@ -37,11 +35,6 @@ public class FilmRowMapper implements RowMapper<Film> {
         Mpa mpa = new Mpa();
         mpa.setId(resultSet.getInt("MPA_ID"));
         film.setMpa(mpa);
-
-//        Director director = new Director();
-//        director.setId(resultSet.getLong("DIRECTOR_ID"));
-//        Set<Director> directors = Set.of(director);
-//        film.setDirectors(directors);
 
         return film;
     }
