@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.DirectorDbStorage;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
 
@@ -45,7 +43,7 @@ public class DirectorDbService {
     }
 
     public void deleteDirector(Long id) {
-        log.info("Проверка существования режиссера с id: {}",id);
+        log.info("Проверка существования режиссера с id: {}", id);
         findById(id);
         directorDbStorage.delete(id);
         log.info("Режиссер с id {} удален.", id);
