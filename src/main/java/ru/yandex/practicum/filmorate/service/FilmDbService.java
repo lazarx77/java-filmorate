@@ -27,6 +27,7 @@ public class FilmDbService {
     private final FilmDbStorage filmDbStorage;
     private final MpaFieldsDbValidator mpaDbValidator;
     private final UserDbService userDbService;
+    private final GenreDbService genreDbService;
 
     /**
      * Возвращает коллекцию всех фильмов.
@@ -131,18 +132,21 @@ public class FilmDbService {
      * @param count Количество фильмов, которые нужно вернуть.
      * @return Список из count самых популярных фильмов.
      */
-    public List<Film> getMostLiked(int count) {
-        Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        Optional<Integer> optionalCount = Optional.ofNullable(count);
         return getAll()
                 .stream()
-                .sorted(comparator)
-                .limit(count)
+                .filter(film -> !film.getLikes().isEmpty())
+                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
+                .filter(film -> genreId == null || film.getGenres().contains(genreDbService.findById(genreId)))
+                .filter(film -> year == null || film.getReleaseDate().getYear() == year)
+                .limit(optionalCount.orElse(Integer.MAX_VALUE))
                 .collect(Collectors.toList());
     }
 
     public List<Film> getCommonFilms(long userId, long friendId) {
         Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
-        return filmDbStorage.getCommonFilms(userId,friendId)
+        return filmDbStorage.getCommonFilms(userId, friendId)
                 .stream()
                 .sorted(comparator)
                 .toList();
