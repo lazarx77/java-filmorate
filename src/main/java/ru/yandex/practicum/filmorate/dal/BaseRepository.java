@@ -28,7 +28,7 @@ public class BaseRepository<T> {
     /**
      * Находит одну сущность по заданному SQL-запросу.
      *
-     * @param query SQL-запрос для поиска сущности.
+     * @param query  SQL-запрос для поиска сущности.
      * @param params Параметры для SQL-запроса.
      * @return Опциональная сущность типа T, если найдена, иначе пустой Optional.
      */
@@ -42,9 +42,25 @@ public class BaseRepository<T> {
     }
 
     /**
+     * Находит одно значение одного столбца по заданному SQL-запросу.
+     *
+     * @param query  SQL-запрос для поиска значений.
+     * @param params Параметры для SQL-запроса.
+     * @return Одно значение типа String.
+     */
+    protected Optional<String> findOneInstances(String query, Object... params) {
+        try {
+            String result = jdbc.queryForObject(query, new SingleColumnRowMapper<>(String.class), params);
+            return Optional.ofNullable(result);
+        } catch (EmptyResultDataAccessException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Находит множество сущностей по заданному SQL-запросу.
      *
-     * @param query SQL-запрос для поиска сущностей.
+     * @param query  SQL-запрос для поиска сущностей.
      * @param params Параметры для SQL-запроса.
      * @return Список сущностей типа T.
      */
@@ -55,10 +71,10 @@ public class BaseRepository<T> {
     /**
      * Находит множество значений одного столбца по заданному SQL-запросу.
      *
-     * @param query SQL-запрос для поиска значений.
-     * @param type Тип значений, которые нужно вернуть.
+     * @param query  SQL-запрос для поиска значений.
+     * @param type   Тип значений, которые нужно вернуть.
      * @param params Параметры для SQL-запроса.
-     * @param <T> Тип значений, которые нужно вернуть.
+     * @param <T>    Тип значений, которые нужно вернуть.
      * @return Список значений типа T.
      */
     protected <T> List<T> findManyInstances(String query, Class<T> type, Object... params) {
@@ -69,7 +85,7 @@ public class BaseRepository<T> {
      * Удаляет сущность по заданному SQL-запросу и идентификатору.
      *
      * @param query SQL-запрос для удаления сущности.
-     * @param id Идентификатор сущности, которую нужно удалить.
+     * @param id    Идентификатор сущности, которую нужно удалить.
      * @return true, если сущность была успешно удалена, иначе false.
      */
     protected boolean delete(String query, long id) {
@@ -81,8 +97,8 @@ public class BaseRepository<T> {
      * Удаляет сущность по двум идентификаторам.
      *
      * @param query SQL-запрос для удаления сущности.
-     * @param id Первый идентификатор сущности.
-     * @param id2 Второй идентификатор сущности.
+     * @param id    Первый идентификатор сущности.
+     * @param id2   Второй идентификатор сущности.
      * @return true, если сущность была успешно удалена, иначе false.
      */
     protected boolean deleteByTwoIds(String query, long id, long id2) {
@@ -91,9 +107,23 @@ public class BaseRepository<T> {
     }
 
     /**
+     * Удаляет сущность по двум идентификаторам и значению.
+     *
+     * @param query SQL-запрос для удаления сущности.
+     * @param id    Первый идентификатор сущности.
+     * @param id2   Второй идентификатор сущности.
+     * @param like  Значение сущности.
+     * @return true, если сущность была успешно удалена, иначе false.
+     */
+    protected boolean deleteByTwoIdsAndLike(String query, long id, long id2, String like) {
+        int rowsDeleted = jdbc.update(query, id, id2, like);
+        return rowsDeleted > 0;
+    }
+
+    /**
      * Вставляет новую сущность в базу данных и возвращает сгенерированный идентификатор.
      *
-     * @param query SQL-запрос для вставки сущности.
+     * @param query  SQL-запрос для вставки сущности.
      * @param params Параметры для SQL-запроса.
      * @return Сгенерированный идентификатор новой сущности.
      * @throws InternalServerException Если не удалось сохранить данные.
@@ -120,7 +150,7 @@ public class BaseRepository<T> {
     /**
      * Вставляет новую сущность в базу данных без возврата сгенерированного идентификатора.
      *
-     * @param query SQL-запрос для вставки сущности.
+     * @param query  SQL-запрос для вставки сущности.
      * @param params Параметры для SQL-запроса.
      */
     protected void insert(String query, Object... params) {
@@ -138,7 +168,7 @@ public class BaseRepository<T> {
     /**
      * Обновляет существующую сущность в базе данных.
      *
-     * @param query SQL-запрос для обновления сущности.
+     * @param query  SQL-запрос для обновления сущности.
      * @param params Параметры для SQL-запроса.
      * @throws InternalServerException Если не удалось обновить данные.
      */
