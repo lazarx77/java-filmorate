@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Repository
 @Qualifier("UserDbStorage")
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
-    private final FilmDbStorage filmDbStorage = new FilmDbStorage(super.jdbc,new FilmRowMapper());
+    private final FilmDbStorage filmDbStorage = new FilmDbStorage(super.jdbc, new FilmRowMapper());
     // SQL-запросы
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM USERS WHERE USER_ID = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM USERS";
@@ -211,6 +211,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     }
 
     public List<Film> getRecommendations(long id) {
-        return filmDbStorage.findMany(GET_USER_LIKES_QUERY,id,id,id);
+        return filmDbStorage.findMany(GET_USER_LIKES_QUERY, id, id, id);
     }
 }

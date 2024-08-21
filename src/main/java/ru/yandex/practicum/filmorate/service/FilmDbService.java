@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dal.HistoryDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.enums.EventTypes;
+import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -28,6 +32,7 @@ public class FilmDbService {
     private final MpaFieldsDbValidator mpaDbValidator;
     private final UserDbService userDbService;
     private final GenreDbService genreDbService;
+    private final HistoryDbStorage historyDbStorage;
 
     /**
      * Возвращает коллекцию всех фильмов.
@@ -109,6 +114,13 @@ public class FilmDbService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         filmDbStorage.addLike(filmId, userId);
         log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.LIKE)
+                .operation(OperationTypes.ADD)
+                .entityId(filmId)
+                .build());
     }
 
     /**
@@ -124,6 +136,13 @@ public class FilmDbService {
         userDbService.findById(userId);
         filmDbStorage.deleteLike(filmId, userId);
         log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.LIKE)
+                .operation(OperationTypes.REMOVE)
+                .entityId(filmId)
+                .build());
     }
 
     /**
