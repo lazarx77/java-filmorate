@@ -26,7 +26,7 @@ public class Event {
     @NotNull
     private long timestamp;
     @NotNull
-    private EventTypes eventTypes;
+    private EventTypes eventType;
     @NotNull
     private OperationTypes operation;
     @NotNull

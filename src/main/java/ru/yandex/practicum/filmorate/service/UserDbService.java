@@ -84,7 +84,7 @@ public class UserDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .eventTypes(EventTypes.FRIEND)
+                .eventType(EventTypes.FRIEND)
                 .operation(OperationTypes.ADD)
                 .entityId(friendId)
                 .build());
@@ -119,7 +119,7 @@ public class UserDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .eventTypes(EventTypes.FRIEND)
+                .eventType(EventTypes.FRIEND)
                 .operation(OperationTypes.REMOVE)
                 .entityId(friendId)
                 .build());

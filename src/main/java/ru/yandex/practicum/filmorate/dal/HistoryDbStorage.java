@@ -1,13 +1,13 @@
 package ru.yandex.practicum.filmorate.dal;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
 
 import java.util.Collection;
-
+@Slf4j
 @Repository
 public class HistoryDbStorage extends BaseRepository<Event> {
     // SQL-запросы
@@ -30,11 +30,13 @@ public class HistoryDbStorage extends BaseRepository<Event> {
                 INSERT_QUERY,
                 event.getUserId(),
                 event.getTimestamp(),
-                event.getEventTypes().toString(),
+                event.getEventType().toString(),
                 event.getOperation().toString(),
                 event.getEntityId()
         );
         event.setEventId(id);
+        log.info("Добавлено действие {} {} = {} пользователя c ID = {}", event.getEventType().toString(),
+                event.getOperation().toString(), event.getEntityId(), event.getUserId());
         return event;
     }
 

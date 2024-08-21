@@ -5,7 +5,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.enums.EventTypes;
+import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.Optional;
 @Slf4j
 @Repository
 public class ReviewDbStorage extends BaseRepository<Review> implements ReviewStorage {
+    private final HistoryDbStorage historyDbStorage;
 
     private static final String LIKE = "like";
     private static final String DISLIKE = "dislike";
@@ -62,8 +66,9 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
             WHERE review_id = ? AND user_id = ?""";
 
 
-    public ReviewDbStorage(JdbcTemplate jdbc, RowMapper<Review> mapper) {
+    public ReviewDbStorage(JdbcTemplate jdbc, RowMapper<Review> mapper, HistoryDbStorage historyDbStorage) {
         super(jdbc, mapper);
+        this.historyDbStorage = historyDbStorage;
     }
 
     @Override
@@ -101,6 +106,13 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         );
         review.setReviewId(id);
         log.info("Отзыв добавлен: {}", review);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(review.getUserId())
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.REVIEW)
+                .operation(OperationTypes.ADD)
+                .entityId(review.getReviewId())
+                .build());
         return review;
     }
 
@@ -119,12 +131,26 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
                 review.getReviewId()
         );
         log.info("Отзыв обновлён: {}", review);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(review.getUserId())
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.REVIEW)
+                .operation(OperationTypes.UPDATE)
+                .entityId(review.getReviewId())
+                .build());
         return review;
     }
 
     @Override
     public void deleteReview(Long id) {
         log.info("Удаление отзыва: {}", id);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(getReview(id).getUserId())
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.REVIEW)
+                .operation(OperationTypes.REMOVE)
+                .entityId(id)
+                .build());
         delete(DELETE_REVIEW_QUERY, id);
         log.info("Отзыв удален: {}", id);
     }

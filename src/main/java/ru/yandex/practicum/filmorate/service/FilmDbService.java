@@ -116,7 +116,7 @@ public class FilmDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .eventTypes(EventTypes.LIKE)
+                .eventType(EventTypes.LIKE)
                 .operation(OperationTypes.ADD)
                 .entityId(filmId)
                 .build());
@@ -138,7 +138,7 @@ public class FilmDbService {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
                 .timestamp(System.currentTimeMillis())
-                .eventTypes(EventTypes.LIKE)
+                .eventType(EventTypes.LIKE)
                 .operation(OperationTypes.REMOVE)
                 .entityId(filmId)
                 .build());
