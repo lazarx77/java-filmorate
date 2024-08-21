@@ -155,7 +155,7 @@ public class FilmDbService {
         Optional<Integer> optionalCount = Optional.ofNullable(count);
         return getAll()
                 .stream()
-                .filter(film -> !film.getLikes().isEmpty())
+                //.filter(film -> !film.getLikes().isEmpty())
                 .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
                 .filter(film -> genreId == null || film.getGenres().contains(genreDbService.findById(genreId)))
                 .filter(film -> year == null || film.getReleaseDate().getYear() == year)
@@ -171,6 +171,11 @@ public class FilmDbService {
                 .toList();
     }
 
+    /**
+     * Удаляет фильм и все связанные с ним записи из таблиц.
+     *
+     * @param filmId Идентификатор фильма.
+     */
     public void deleteFilm(long filmId) {
         filmDbStorage.deleteFilm(filmId);
         log.info("Фильм с id {} удален.", filmId);

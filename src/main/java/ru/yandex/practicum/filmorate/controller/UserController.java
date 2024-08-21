@@ -141,6 +141,11 @@ public class UserController {
         return feedService.getFeed(id);
     }
 
+    /**
+     * deleteUser - удаляет пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     */
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable("id") long id) {
         userDbService.deleteUser(id);

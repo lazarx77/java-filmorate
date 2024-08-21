@@ -161,6 +161,11 @@ public class UserDbService {
         return userDbStorage.getRecommendations(id);
     }
 
+    /**
+     * Удаляет пользователя и все связанные с ним записи из таблиц.
+     *
+     * @param userId Идентификатор пользователя.
+     */
     public void deleteUser(long userId) {
         userDbStorage.deleteUser(userId);
         log.info("Пользователь с id {} удален.", userId);

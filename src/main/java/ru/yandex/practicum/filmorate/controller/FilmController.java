@@ -117,6 +117,11 @@ public class FilmController {
         return filmDbService.getCommonFilms(userId, friendId);
     }
 
+    /**
+     * getFilmById - удаляет фильм.
+     *
+     * @param id идентификатор фильма
+     */
     @DeleteMapping("/{id}")
     public void deleteFilm(@PathVariable("id") long id) {
         filmDbService.deleteFilm(id);
