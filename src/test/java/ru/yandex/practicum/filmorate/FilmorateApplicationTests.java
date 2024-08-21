@@ -114,7 +114,7 @@ class FilmorateApplicationTests {
     @DirtiesContext
     void getPopularTest() {
         filmDbService.addLike(1L, 1L);
-        List<Film> popular = filmDbService.getMostLiked(1);
+        List<Film> popular = filmDbService.getPopularFilms(1, null, null);
         assertEquals(1, popular.size());
     }
 
