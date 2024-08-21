@@ -139,4 +139,12 @@ public class FilmDbService {
                 .limit(count)
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+        return filmDbStorage.getCommonFilms(userId,friendId)
+                .stream()
+                .sorted(comparator)
+                .toList();
+    }
 }
