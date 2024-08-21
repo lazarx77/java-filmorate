@@ -150,7 +150,7 @@ public class FilmDbService {
 
         return getAll()
                 .stream()
-                .filter(film -> film.getDirectors().stream().findFirst()
+                .filter(film -> film.getDirector().stream().findFirst()
                         .orElseThrow(() -> new NotFoundException("У фильма с id " + id + " не указан режиссер"))
                         .getId()
                         .equals(id))

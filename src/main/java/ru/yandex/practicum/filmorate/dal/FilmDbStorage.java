@@ -31,10 +31,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
     private static final String DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
-//    private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
-    private static final String FIND_FILM_BY_ID_QUERY = "SELECT f.FILM_ID, f.FILM_NAME, f.DESCRIPTION," +
-        " f.RELEASE_DATE, f.DURATION, f.MPA_ID, d.DIRECTOR_ID, d.DIRECTOR_NAME FROM FILMS f JOIN FILMS_DIRECTORS fd" +
-        " ON f.FILM_ID = fd.FILM_ID JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID WHERE f.FILM_ID = ?";
+    private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
+//    private static final String FIND_FILM_BY_ID_QUERY = "SELECT f.FILM_ID, f.FILM_NAME, f.DESCRIPTION," +
+//        " f.RELEASE_DATE, f.DURATION, f.MPA_ID, d.DIRECTOR_ID, d.DIRECTOR_NAME FROM FILMS f JOIN FILMS_DIRECTORS fd" +
+//        " ON f.FILM_ID = fd.FILM_ID JOIN DIRECTORS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID WHERE f.FILM_ID = ?";
 
 
 
@@ -92,7 +92,7 @@ private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
-            film.setDirectors(new HashSet<>(directorDbService.findDirectorsByFilmId(film.getId())));
+            film.setDirector(new HashSet<>(directorDbService.findDirectorsByFilmId(film.getId())));
         }
         return films;
     }
@@ -117,17 +117,31 @@ private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS
                 insert(INSERT_FILM_GENRE_QUERY, id, genre.getId());
             }
         }
-        Set<Director> directors = film.getDirectors();
-        if (directors != null) {
-            for (Director director : directors) {
-                directorDbValidatorService.checkDirectorId(director.getId());
-            }
-//            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, film.getId());
-            for (Director director : directors) {
-                director.setName(directorDbService.findDirectorNameById(director.getId()));
-                insert(INSERT_FILM_DIRECTOR_QUERY, film.getId(), director.getId());
-            }
+        Set<Director> directors = film.getDirector();
+        for (Director director : directors) {
+            directorDbValidatorService.checkDirectorId(director.getId());
         }
+        for (Director director : directors) {
+            director.setName(directorDbService.findDirectorNameById(director.getId()));
+            insert(INSERT_FILM_DIRECTOR_QUERY, id, director.getId());
+        }
+//        film
+//                .getDirector()
+//                .spliterator()
+//                .forEachRemaining(director -> director
+//                        .setName(directorDbService
+//                                .findDirectorNameById(director
+//                                        .getId())));
+//        if (directors != null) {
+//            for (Director director : directors) {
+//                directorDbValidatorService.checkDirectorId(director.getId());
+//            }
+////            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, film.getId());
+//            for (Director director : directors) {
+//                director.setName(directorDbService.findDirectorNameById(director.getId()));
+//                insert(INSERT_FILM_DIRECTOR_QUERY, film.getId(), director.getId());
+//            }
+//        }
             film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
             film.setId(id);
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
@@ -154,7 +168,7 @@ private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS
                 insert(INSERT_FILM_GENRE_QUERY, updatedFilm.getId(), genre.getId());
             }
         }
-        Set<Director> directors = updatedFilm.getDirectors();
+        Set<Director> directors = updatedFilm.getDirector();
         if (directors != null) {
             for (Director director : directors) {
                 directorDbValidatorService.checkDirectorId(director.getId());
@@ -204,7 +218,7 @@ private static final String INSERT_FILM_QUERY_WITH_DIRECTOR = "INSERT INTO FILMS
             for (Director director : directors) {
                 director.setName(directorDbService.findDirectorNameById(director.getId()));
             }
-        film.setDirectors(directors);
+        film.setDirector(directors);
         film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(id)));
         return film;
     }

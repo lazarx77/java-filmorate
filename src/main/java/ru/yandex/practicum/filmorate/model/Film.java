@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,5 +43,5 @@ public class Film {
     private Mpa mpa;
     @NotNull(message = "Поле ЖАНРЫ не может быть Null")
     private Set<Genre> genres = new HashSet<>();
-    private Set<Director> directors;
+    private Set<Director> director;
 }

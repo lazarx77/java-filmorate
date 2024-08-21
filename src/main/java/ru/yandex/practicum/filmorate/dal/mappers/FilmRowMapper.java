@@ -38,10 +38,10 @@ public class FilmRowMapper implements RowMapper<Film> {
         mpa.setId(resultSet.getInt("MPA_ID"));
         film.setMpa(mpa);
 
-        Director director = new Director();
-        director.setId(resultSet.getLong("DIRECTOR_ID"));
-        Set<Director> directors = Set.of(director);
-        film.setDirectors(directors);
+//        Director director = new Director();
+//        director.setId(resultSet.getLong("DIRECTOR_ID"));
+//        Set<Director> directors = Set.of(director);
+//        film.setDirectors(directors);
 
         return film;
     }
