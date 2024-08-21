@@ -42,6 +42,32 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
+    private static final String COMMON_FILMS_QUERY = "    " +
+            "    WITH USER_films AS (\n" +
+            "                        SELECT f.film_id,\n" +
+            "                               count(*) AS cnt\n" +
+            "                          FROM LIKES l\n" +
+            "                         INNER JOIN films f\n" +
+            "                            ON f.film_id = l.film_id\n" +
+            "                         WHERE l.user_id = ?\n" +
+            "                         GROUP BY f.film_id\n" +
+            "                        ),\n" +
+            "       friend_films AS (\n" +
+            "                        SELECT f.film_id,\n" +
+            "                               count(*) AS cnt\n" +
+            "                          FROM LIKES l\n" +
+            "                         INNER JOIN films f\n" +
+            "                            ON f.film_id = l.film_id\n" +
+            "                         WHERE l.user_id = ?\n" +
+            "                         GROUP BY f.film_id\n" +
+            "                       )\n" +
+            "                SELECT f.*\n" +
+            "                  FROM films f\n" +
+            "                 INNER JOIN USER_films u \n" +
+            "                    ON f.FILM_ID = u.film_id\n" +
+            "                 INNER JOIN friend_films ff \n" +
+            "                    ON ff.film_id = f.FILM_ID \n" +
+            "                 ORDER BY u.cnt desc";
 
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
@@ -188,5 +214,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
         }
         deleteByTwoIds(DELETE_LIKE_QUERY, filmId, userId);
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        List<Film> result = super.findMany(COMMON_FILMS_QUERY,userId,friendId);
+        for (Film film: result) {
+            film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+        }
+        return result;
     }
 }
