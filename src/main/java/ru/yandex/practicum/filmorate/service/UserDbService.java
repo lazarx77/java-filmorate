@@ -3,10 +3,15 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.HistoryDbStorage;
 import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventTypes;
+import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +27,7 @@ public class UserDbService {
 
     private final UserFieldsDbValidatorService userDbValidator;
     private final UserDbStorage userDbStorage;
+    private final HistoryDbStorage historyDbStorage;
 
     /**
      * Возвращает список всех пользователей.
@@ -75,6 +81,13 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.addFriend(userId, friendId);
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.FRIEND)
+                .operation(OperationTypes.ADD)
+                .entityId(friendId)
+                .build());
     }
 
     /**
@@ -103,6 +116,13 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.deleteFriend(userId, friendId);
         log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.FRIEND)
+                .operation(OperationTypes.REMOVE)
+                .entityId(friendId)
+                .build());
     }
 
     /**
@@ -135,5 +155,9 @@ public class UserDbService {
      */
     public List<User> getCommonFriends(Long userId, Long otherId) {
         return userDbStorage.getCommonFriends(userId, otherId);
+    }
+
+    public List<Film> getRecommendations(long id) {
+        return userDbStorage.getRecommendations(id);
     }
 }

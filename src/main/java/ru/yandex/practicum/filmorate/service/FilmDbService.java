@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dal.HistoryDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.enums.EventTypes;
+import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -27,6 +31,8 @@ public class FilmDbService {
     private final FilmDbStorage filmDbStorage;
     private final MpaFieldsDbValidator mpaDbValidator;
     private final UserDbService userDbService;
+    private final GenreDbService genreDbService;
+    private final HistoryDbStorage historyDbStorage;
 
     /**
      * Возвращает коллекцию всех фильмов.
@@ -108,6 +114,13 @@ public class FilmDbService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         filmDbStorage.addLike(filmId, userId);
         log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.LIKE)
+                .operation(OperationTypes.ADD)
+                .entityId(filmId)
+                .build());
     }
 
     /**
@@ -123,6 +136,13 @@ public class FilmDbService {
         userDbService.findById(userId);
         filmDbStorage.deleteLike(filmId, userId);
         log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.LIKE)
+                .operation(OperationTypes.REMOVE)
+                .entityId(filmId)
+                .build());
     }
 
     /**
@@ -131,13 +151,24 @@ public class FilmDbService {
      * @param count Количество фильмов, которые нужно вернуть.
      * @return Список из count самых популярных фильмов.
      */
-    public List<Film> getMostLiked(int count) {
-        Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        Optional<Integer> optionalCount = Optional.ofNullable(count);
         return getAll()
                 .stream()
-                .sorted(comparator)
-                .limit(count)
+                .filter(film -> !film.getLikes().isEmpty())
+                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
+                .filter(film -> genreId == null || film.getGenres().contains(genreDbService.findById(genreId)))
+                .filter(film -> year == null || film.getReleaseDate().getYear() == year)
+                .limit(optionalCount.orElse(Integer.MAX_VALUE))
                 .collect(Collectors.toList());
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+        return filmDbStorage.getCommonFilms(userId, friendId)
+                .stream()
+                .sorted(comparator)
+                .toList();
     }
 
     /**
