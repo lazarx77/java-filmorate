@@ -115,7 +115,7 @@ public class ReviewController {
      * Удаляет дизлайк с отзыва.
      *
      * @param reviewId идентификатор отзыва
-     * @param userId   идентификатор пользователя, который удаляет дизлайк
+     * @param userId   идентификатор пользователя, который удаляет свой дизлайк
      */
     @DeleteMapping("/{id}/dislike/{userId}")
     public void deleteDislikeInReview(@PathVariable("id") Long reviewId, @PathVariable Long userId) {
