@@ -81,13 +81,7 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.addFriend(userId, friendId);
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
-        historyDbStorage.addEvent(Event.builder()
-                .userId(userId)
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.FRIEND)
-                .operation(OperationTypes.ADD)
-                .entityId(friendId)
-                .build());
+        saveHistory(friendId,userId,OperationTypes.ADD);
     }
 
     /**
@@ -116,13 +110,7 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.deleteFriend(userId, friendId);
         log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
-        historyDbStorage.addEvent(Event.builder()
-                .userId(userId)
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.FRIEND)
-                .operation(OperationTypes.REMOVE)
-                .entityId(friendId)
-                .build());
+        saveHistory(friendId,userId,OperationTypes.REMOVE);
     }
 
     /**
@@ -169,5 +157,15 @@ public class UserDbService {
     public void deleteUser(long userId) {
         userDbStorage.deleteUser(userId);
         log.info("Пользователь с id {} удален.", userId);
+    }
+
+    private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.FRIEND)
+                .operation(operationTypes)
+                .entityId(id)
+                .build());
     }
 }
