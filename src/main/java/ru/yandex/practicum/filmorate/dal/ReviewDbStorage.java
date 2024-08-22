@@ -106,13 +106,7 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         );
         review.setReviewId(id);
         log.info("Отзыв добавлен: {}", review);
-        historyDbStorage.addEvent(Event.builder()
-                .userId(review.getUserId())
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.REVIEW)
-                .operation(OperationTypes.ADD)
-                .entityId(review.getReviewId())
-                .build());
+        saveHistory(review.getReviewId(), review.getUserId(), OperationTypes.ADD);
         return review;
     }
 
@@ -131,28 +125,26 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
                 review.getReviewId()
         );
         log.info("Отзыв обновлён: {}", review);
-        historyDbStorage.addEvent(Event.builder()
-                .userId(review.getUserId())
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.REVIEW)
-                .operation(OperationTypes.UPDATE)
-                .entityId(review.getReviewId())
-                .build());
+        saveHistory(review.getReviewId(), review.getUserId(), OperationTypes.UPDATE);
         return review;
     }
 
     @Override
     public void deleteReview(Long id) {
         log.info("Удаление отзыва: {}", id);
-        historyDbStorage.addEvent(Event.builder()
-                .userId(getReview(id).getUserId())
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.REVIEW)
-                .operation(OperationTypes.REMOVE)
-                .entityId(id)
-                .build());
+        saveHistory(id, getReview(id).getUserId(), OperationTypes.REMOVE);
         delete(DELETE_REVIEW_QUERY, id);
         log.info("Отзыв удален: {}", id);
+    }
+
+    private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.REVIEW)
+                .operation(operationTypes)
+                .entityId(id)
+                .build());
     }
 
     private void increaseToUseful(Long reviewId) {

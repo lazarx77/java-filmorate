@@ -113,13 +113,7 @@ public class FilmDbService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         filmDbStorage.addLike(filmId, userId);
         log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
-        historyDbStorage.addEvent(Event.builder()
-                .userId(userId)
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.LIKE)
-                .operation(OperationTypes.ADD)
-                .entityId(filmId)
-                .build());
+        saveHistory(filmId,userId,OperationTypes.ADD);
     }
 
     /**
@@ -135,13 +129,7 @@ public class FilmDbService {
         userDbService.findById(userId);
         filmDbStorage.deleteLike(filmId, userId);
         log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
-        historyDbStorage.addEvent(Event.builder()
-                .userId(userId)
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.LIKE)
-                .operation(OperationTypes.REMOVE)
-                .entityId(filmId)
-                .build());
+        saveHistory(filmId,userId,OperationTypes.REMOVE);
     }
 
     /**
@@ -165,5 +153,15 @@ public class FilmDbService {
                 .stream()
                 .sorted(comparator)
                 .toList();
+    }
+
+    private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.LIKE)
+                .operation(operationTypes)
+                .entityId(id)
+                .build());
     }
 }
