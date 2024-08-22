@@ -114,7 +114,7 @@ public class FilmDbService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         filmDbStorage.addLike(filmId, userId);
         log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
-        saveHistory(filmId,userId,OperationTypes.ADD);
+        saveHistory(filmId, userId, OperationTypes.ADD);
     }
 
     /**
@@ -130,7 +130,7 @@ public class FilmDbService {
         userDbService.findById(userId);
         filmDbStorage.deleteLike(filmId, userId);
         log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
-        saveHistory(filmId,userId,OperationTypes.REMOVE);
+        saveHistory(filmId, userId, OperationTypes.REMOVE);
     }
 
     /**
@@ -216,5 +216,32 @@ public class FilmDbService {
                 .operation(operationTypes)
                 .entityId(id)
                 .build());
+    }
+
+    /**
+     * searchFilm - поиск фильмов по названию и режиссеру.
+     *
+     * @param query значаение для поиска
+     * @param by    поиск выполнять по названию фильма, режиссера или вместе
+     * @return результат поиска
+     */
+    public List<Film> searchFilms(String query, String by) {
+        log.info("Поиск фильмов по запросу: {} в: {}", query, by);
+
+        String[] searchBy = by.split(",");
+        return filmDbStorage.getAll().stream()
+                .filter(film -> {
+                    boolean matchTitle = searchBy.length == 1 && searchBy[0].equalsIgnoreCase("title")
+                            && film.getName().toLowerCase().contains(query.toLowerCase());
+                    boolean matchDirector = searchBy.length == 1 && searchBy[0].equalsIgnoreCase("director")
+                            && film.getDirectors().stream()
+                            .anyMatch(director -> director.getName().toLowerCase().contains(query.toLowerCase()));
+                    boolean matchBoth = searchBy.length == 2 &&
+                            (film.getName().toLowerCase().contains(query.toLowerCase()) ||
+                                    film.getDirectors().stream()
+                                            .anyMatch(director -> director.getName().toLowerCase().contains(query.toLowerCase())));
+                    return matchTitle || matchDirector || matchBoth;
+                })
+                .collect(Collectors.toList());
     }
 }
