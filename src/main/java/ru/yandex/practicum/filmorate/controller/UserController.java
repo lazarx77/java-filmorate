@@ -140,4 +140,14 @@ public class UserController {
     public List<Event> getFeed(@PathVariable("id") long id) {
         return feedService.getFeed(id);
     }
+
+    /**
+     * deleteUser - удаляет пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     */
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable("id") long id) {
+        userDbService.deleteUser(id);
+    }
 }
