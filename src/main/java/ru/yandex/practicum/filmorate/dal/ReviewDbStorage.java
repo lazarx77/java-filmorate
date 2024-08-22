@@ -14,6 +14,11 @@ import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Класс для работы с базой данных отзывов на фильмы.
+ * Реализует интерфейс ReviewStorage и предоставляет методы для управления отзывами,
+ * включая добавление, обновление, удаление, а также управление лайками и дизлайками.
+ */
 @Slf4j
 @Repository
 public class ReviewDbStorage extends BaseRepository<Review> implements ReviewStorage {
@@ -71,6 +76,13 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         this.historyDbStorage = historyDbStorage;
     }
 
+    /**
+     * Получает отзыв по его идентификатору.
+     *
+     * @param id идентификатор отзыва
+     * @return объект Review, соответствующий указанному идентификатору
+     * @throws NotFoundException если отзыв с таким идентификатором не найден
+     */
     @Override
     public Review getReview(Long id) {
         log.info("Получение отзыва по ИД {}", id);
@@ -78,6 +90,14 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         return optionalReview.orElseThrow(() -> new NotFoundException("Отзыв не найден"));
     }
 
+    /**
+     * Получает список отзывов для указанного фильма.
+     * Если filmId или count равны null, возвращаются все отзывы или ограниченное количество.
+     *
+     * @param filmId идентификатор фильма
+     * @param count  количество отзывов, которое необходимо вернуть
+     * @return список отзывов для указанного фильма
+     */
     @Override
     public List<Review> getReviewsForFilm(Long filmId, Integer count) {
         if (filmId == null) {
@@ -92,6 +112,13 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         }
     }
 
+    /**
+     * Добавляет новый отзыв в базу данных.
+     * Устанавливает начальное значение полезности равным 0.
+     *
+     * @param review объект Review, который необходимо добавить
+     * @return добавленный объект Review
+     */
     @Override
     public Review addReview(Review review) {
         log.info("Добавление отзыва: {}", review);
@@ -110,6 +137,14 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         return review;
     }
 
+    /**
+     * Обновляет существующий отзыв в базе данных.
+     * Если поле полезности не установлено, используется текущее значение.
+     *
+     * @param review объект Review, содержащий обновленные данные
+     * @return обновленный объект Review
+     * @throws NotFoundException если отзыв с указанным идентификатором не найден
+     */
     @Override
     public Review updateReview(Review review) {
         log.info("Обновление отзыва: {}", review);
@@ -129,6 +164,13 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         return review;
     }
 
+    /**
+     * Удаляет отзыв по его идентификатору из базы данных.
+     * Записывает событие удаления в историю.
+     *
+     * @param id идентификатор отзыва, который необходимо удалить
+     * @throws NotFoundException если отзыв с таким идентификатором не найден
+     */
     @Override
     public void deleteReview(Long id) {
         log.info("Удаление отзыва: {}", id);
@@ -137,6 +179,13 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         log.info("Отзыв удален: {}", id);
     }
 
+    /**
+     * Сохраняет событие (например, добавление, обновление, удаление отзыва) в историю.
+     *
+     * @param id идентификатор отзыва
+     * @param userId идентификатор пользователя, связанного с событием
+     * @param operationTypes тип операции (добавление, обновление, удаление)
+     */
     private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
         historyDbStorage.addEvent(Event.builder()
                 .userId(userId)
@@ -147,21 +196,46 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
                 .build());
     }
 
+    /**
+     * Повышает полезность отзыва (увеличивает значение useful).
+     *
+     * @param reviewId идентификатор отзыва, полезность которого необходимо повысить
+     */
     private void increaseToUseful(Long reviewId) {
         log.info("Повышение рейтинга полезности отзыва");
         update(UPDATE_USEFUL_UP_QUERY, reviewId);
     }
 
+    /**
+     * Понижает полезность отзыва (уменьшает значение useful).
+     *
+     * @param reviewId идентификатор отзыва, полезность которого необходимо понизить
+     */
     private void downgradeToUseful(Long reviewId) {
         log.info("Понижение рейтинга полезности отзыва");
         update(UPDATE_USEFUL_DOWN_QUERY, reviewId);
     }
 
+    /**
+     * Проверяет, существует ли лайк или дизлайк на отзыв от конкретного пользователя.
+     *
+     * @param reviewId идентификатор отзыва
+     * @param userId идентификатор пользователя
+     * @return true, если лайк или дизлайк существует, иначе false
+     */
     private boolean isLikeOrDislike(Long reviewId, Long userId) {
         Optional<String> like = findOneInstances(FIND_LIKE_OR_DISLIKE_QUERY, reviewId, userId);
         return like.isPresent();
     }
 
+    /**
+     * Добавляет лайк на отзыв.
+     * Если у пользователя уже есть дизлайк, он удаляется.
+     * Увеличивает значение полезности отзыва.
+     *
+     * @param reviewId идентификатор отзыва
+     * @param userId идентификатор пользователя
+     */
     @Override
     public void addLikeInReview(Long reviewId, Long userId) {
         if (isLikeOrDislike(reviewId, userId)) {
@@ -173,6 +247,14 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         increaseToUseful(reviewId);
     }
 
+    /**
+     * Добавляет дизлайк на отзыв.
+     * Если у пользователя уже есть лайк, он удаляется.
+     * Уменьшает значение полезности отзыва.
+     *
+     * @param reviewId идентификатор отзыва
+     * @param userId идентификатор пользователя
+     */
     @Override
     public void addDislikeInReview(Long reviewId, Long userId) {
         if (isLikeOrDislike(reviewId, userId)) {
@@ -184,6 +266,12 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         downgradeToUseful(reviewId);
     }
 
+    /**
+     * Удаляет лайк с отзыва и понижает значение полезности.
+     *
+     * @param reviewId идентификатор отзыва
+     * @param userId идентификатор пользователя
+     */
     @Override
     public void deleteLikeInReview(Long reviewId, Long userId) {
         log.info("Удаление лайка отзыва с ИД: {}", reviewId);
@@ -192,6 +280,12 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         downgradeToUseful(reviewId);
     }
 
+    /**
+     * Удаляет дизлайк с отзыва и повышает значение полезности.
+     *
+     * @param reviewId идентификатор отзыва
+     * @param userId идентификатор пользователя
+     */
     @Override
     public void deleteDislikeInReview(Long reviewId, Long userId) {
         log.info("Удаление дислайка отзыва с ИД: {}", reviewId);
