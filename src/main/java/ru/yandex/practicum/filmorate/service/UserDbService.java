@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Event;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.enums.EventTypes;
 import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
@@ -46,7 +45,6 @@ public class UserDbService {
      * @throws ValidationException Если данные пользователя некорректны.
      */
     public User createUser(User user) {
-        userDbValidator.checkUserFieldsOnCreate(user);
         return userDbStorage.createUser(user);
     }
 
@@ -81,7 +79,7 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.addFriend(userId, friendId);
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
-        saveHistory(friendId,userId,OperationTypes.ADD);
+        saveHistory(friendId, userId, OperationTypes.ADD);
     }
 
     /**
@@ -110,7 +108,7 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.deleteFriend(userId, friendId);
         log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
-        saveHistory(friendId,userId,OperationTypes.REMOVE);
+        saveHistory(friendId, userId, OperationTypes.REMOVE);
     }
 
     /**
@@ -143,10 +141,6 @@ public class UserDbService {
      */
     public List<User> getCommonFriends(Long userId, Long otherId) {
         return userDbStorage.getCommonFriends(userId, otherId);
-    }
-
-    public List<Film> getRecommendations(long id) {
-        return userDbStorage.getRecommendations(id);
     }
 
     /**

@@ -116,7 +116,8 @@ public class FilmController {
      * @return список фильмов одного режиссера, отсортированный по указанному параметру
      */
     @GetMapping("/director/{directorId}")
-    public List<Film> getDirectorFilms(@PathVariable("directorId") Long id, @RequestParam(defaultValue = "year") String sortBy) {
+    public List<Film> getDirectorFilms(@PathVariable("directorId") Long id,
+                                       @RequestParam(defaultValue = "year") String sortBy) {
         return filmDbService.getDirectorFilms(id, sortBy);
     }
 
@@ -134,8 +135,8 @@ public class FilmController {
     /**
      * searchFilm - поиск фильмов по названию и режиссеру.
      *
-     * @param query  значаение для поиска
-     * @param by поиск выполнять по названию фильма, режиссера или вместе
+     * @param query значаение для поиска
+     * @param by    поиск выполнять по названию фильма, режиссера или вместе
      * @return результат поиска
      */
     @GetMapping("/search")
@@ -143,6 +144,4 @@ public class FilmController {
                                  @RequestParam("by") String by) {
         return filmDbService.searchFilms(query, by);
     }
-
-
 }

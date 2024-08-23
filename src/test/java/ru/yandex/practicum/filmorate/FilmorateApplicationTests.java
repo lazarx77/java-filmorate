@@ -33,7 +33,8 @@ import static org.junit.jupiter.api.Assertions.*;
         FilmDbService.class, FilmRowMapper.class, GenreDbService.class, GenreRowMapper.class,
         MpaFieldsDbValidator.class, MpaRowMapper.class, FieldsValidatorService.class,
         FilmFieldsDbValidatorService.class, UserFieldsDbValidatorService.class,
-        HistoryDbStorage.class, EventRowMapper.class})
+        HistoryDbStorage.class, EventRowMapper.class, DirectorDbService.class, DirectorDbStorage.class,
+        DirectorRowMapper.class, DirectorDbValidatorService.class})
 class FilmorateApplicationTests {
 
     private final UserDbService userDbService;

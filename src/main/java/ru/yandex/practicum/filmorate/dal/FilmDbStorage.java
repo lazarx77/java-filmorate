@@ -17,6 +17,7 @@ import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Репозиторий для работы с фильмами в базе данных.
@@ -74,6 +75,25 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String DELETE_FILM_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE FILM_ID = ?";
     private static final String DELETE_FILM_EVENT_QUERY = "DELETE FROM HISTORY_ACTIONS " +
             "WHERE ENTITY_ID = ? AND TYPE IN('LIKE', 'REVIEW')";
+    private static final String GET_USER_LIKES_QUERY = """
+            WITH prep AS (
+                SELECT l1.USER_ID,
+                       COUNT(*) AS cnt
+                  FROM likes l1
+                 INNER JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+                                    AND l2.USER_ID = ?
+                 WHERE l1.USER_ID != ?
+                 GROUP BY l1.USER_ID
+                 ORDER BY COUNT(*) DESC
+            )
+            SELECT f.*
+              FROM LIKES l1
+             INNER JOIN prep p ON p.USER_ID = l1.USER_ID
+             LEFT JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+                               AND l2.USER_ID = ?
+             INNER JOIN films f ON f.FILM_ID = l1.FILM_ID
+             WHERE l2.FILM_ID IS NULL
+             ORDER BY p.cnt DESC""";
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final RowMapper<Director> directorMapper = new DirectorRowMapper();
@@ -111,7 +131,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
-            film.setDirectors(new HashSet<>(directorDbService.findDirectorsByFilmId(film.getId())));
+            List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());
+            for (Director director : directors) {
+                director.setName(directorDbService.findDirectorNameById(director.getId()));
+            }
+            film.setDirectors(new HashSet<>(directors));
         }
         return films;
     }
@@ -127,20 +151,26 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
                 film.getDescription(), film.getMpa().getId());
         Set<Genre> genres = film.getGenres();
-        if (genres != null) {
+        Set<Genre> sortedGenres = new HashSet<>();
+        if (genres != null && !genres.isEmpty()) {
             for (Genre genre : genres) {
                 genreDbValidator.checkGenreId(genre.getId());
             }
-            for (Genre genre : genres) {
+            sortedGenres = genres.stream()
+                    .sorted(Comparator.comparing(Genre::getId))
+                    .collect(Collectors.toCollection(LinkedHashSet::new)); // Используем LinkedHashSet для сохранения порядка
+
+            for (Genre genre : sortedGenres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(INSERT_FILM_GENRE_QUERY, id, genre.getId());
             }
         }
         Set<Director> directors = film.getDirectors();
-        if (directors != null) {
+        if (directors != null && !directors.isEmpty()) {
             for (Director director : directors) {
                 directorDbValidatorService.checkDirectorId(director.getId());
             }
+
             for (Director director : directors) {
                 director.setName(directorDbService.findDirectorNameById(director.getId()));
                 insert(INSERT_FILM_DIRECTOR_QUERY, id, director.getId());
@@ -149,6 +179,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
+        film.setGenres(sortedGenres);
 
         return film;
     }
@@ -167,7 +198,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 genreDbValidator.checkGenreId(genre.getId());
             }
             delete(DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
-            for (Genre genre : genres) {
+            Set<Genre> sortedGenres = Set.copyOf(genres.stream().sorted(Comparator.comparing(Genre::getId))
+                    .collect(Collectors.toList()));
+            for (Genre genre : sortedGenres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(INSERT_FILM_GENRE_QUERY, updatedFilm.getId(), genre.getId());
             }
@@ -182,6 +215,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 d.setName(directorDbService.findDirectorNameById(d.getId()));
                 insert(INSERT_FILM_DIRECTOR_QUERY, updatedFilm.getId(), d.getId());
             }
+        } else {
+            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
         }
 
         update(
@@ -266,5 +301,20 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         delete(DELETE_FILM_EVENT_QUERY, filmId);
         delete(DELETE_FILM_GENRE_QUERY, filmId);
         delete(DELETE_FILM_QUERY, filmId);
+    }
+
+    public List<Film> getRecommendations(long id) {
+        List<Film> films = findMany(GET_USER_LIKES_QUERY, id, id, id);
+        for (Film film : films) {
+            film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
+            film.setMpa(mpaDbService.findById(film.getMpa().getId()));
+            film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+            List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());
+            for (Director director : directors) {
+                director.setName(directorDbService.findDirectorNameById(director.getId()));
+            }
+            film.setDirectors(new HashSet<>(directors));
+        }
+        return films;
     }
 }

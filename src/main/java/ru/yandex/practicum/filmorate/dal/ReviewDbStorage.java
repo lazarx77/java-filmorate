@@ -182,8 +182,8 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
     /**
      * Сохраняет событие (например, добавление, обновление, удаление отзыва) в историю.
      *
-     * @param id идентификатор отзыва
-     * @param userId идентификатор пользователя, связанного с событием
+     * @param id             идентификатор отзыва
+     * @param userId         идентификатор пользователя, связанного с событием
      * @param operationTypes тип операции (добавление, обновление, удаление)
      */
     private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
@@ -220,7 +220,7 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
      * Проверяет, существует ли лайк или дизлайк на отзыв от конкретного пользователя.
      *
      * @param reviewId идентификатор отзыва
-     * @param userId идентификатор пользователя
+     * @param userId   идентификатор пользователя
      * @return true, если лайк или дизлайк существует, иначе false
      */
     private boolean isLikeOrDislike(Long reviewId, Long userId) {
@@ -234,7 +234,7 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
      * Увеличивает значение полезности отзыва.
      *
      * @param reviewId идентификатор отзыва
-     * @param userId идентификатор пользователя
+     * @param userId   идентификатор пользователя
      */
     @Override
     public void addLikeInReview(Long reviewId, Long userId) {
@@ -253,7 +253,7 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
      * Уменьшает значение полезности отзыва.
      *
      * @param reviewId идентификатор отзыва
-     * @param userId идентификатор пользователя
+     * @param userId   идентификатор пользователя
      */
     @Override
     public void addDislikeInReview(Long reviewId, Long userId) {
@@ -270,7 +270,7 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
      * Удаляет лайк с отзыва и понижает значение полезности.
      *
      * @param reviewId идентификатор отзыва
-     * @param userId идентификатор пользователя
+     * @param userId   идентификатор пользователя
      */
     @Override
     public void deleteLikeInReview(Long reviewId, Long userId) {
@@ -284,7 +284,7 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
      * Удаляет дизлайк с отзыва и повышает значение полезности.
      *
      * @param reviewId идентификатор отзыва
-     * @param userId идентификатор пользователя
+     * @param userId   идентификатор пользователя
      */
     @Override
     public void deleteDislikeInReview(Long reviewId, Long userId) {

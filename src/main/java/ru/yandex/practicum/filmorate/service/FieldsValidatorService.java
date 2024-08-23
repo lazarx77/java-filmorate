@@ -78,23 +78,6 @@ public class FieldsValidatorService {
     }
 
     /**
-     * emailDoubleValidator проверяет уникальность пользователя.
-     *
-     * @param user  - объект класса User с обновленными данными.
-     * @param users - коллекция всех существующих всех пользователей.
-     * @throws ValidationException - если имейл уже используется.
-     */
-    public static void emailDoubleValidator(User user, Map<Long, User> users) {
-        for (Long id : users.keySet()) {
-            User middleUser = users.get(id);
-            if (user.getEmail().equals(middleUser.getEmail())) {
-                throw new ValidationException("Этот имейл уже используется");
-            }
-        }
-    }
-
-
-    /**
      * validateUserId проверяет, что у пользователя задан идентификатор.
      *
      * @param user - объект класса Film, для которого проверяется наличие идентификатора.
@@ -118,16 +101,6 @@ public class FieldsValidatorService {
 
         if (!users.containsKey(updatedUser.getId())) {
             throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
-        }
-
-        if (!updatedUser.getEmail().equals(users.get(updatedUser.getId()).getEmail())) {
-            for (Long id : users.keySet()) {
-                User middleUser = users.get(id);
-                if (updatedUser.getEmail().equals(middleUser.getEmail())) {
-                    throw new ValidationException("Имейл " + updatedUser.getEmail() + " уже присвоен другому " +
-                            "пользователю: " + middleUser.getLogin());
-                }
-            }
         }
 
         User oldUser = users.get(updatedUser.getId());

@@ -6,7 +6,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -36,28 +35,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String FIND_FRIENDS_IDS = "SELECT FRIEND_ID FROM FRIENDSHIP WHERE USER_ID = ?";
     private static final String INSERT_FRIEND_QUERY = "INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID) VALUES (?, ?)";
     private static final String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
-    private static final String GET_USER_LIKES_QUERY = "WITH prep AS (\n" +
-            "\t\t\t\tSELECT l1.USER_ID,\n" +
-            "\t\t\t\t       COUNT(*) cnt\n" +
-            "\t\t\t\t  FROM likes l1\n" +
-            "\t\t\t\t INNER JOIN likes l2\n" +
-            "\t\t\t\t    ON l2.FILM_ID = l1.film_id\n" +
-            "\t\t\t\t   AND l2.USER_ID = ?\n" +
-            "\t\t\t\t WHERE l1.user_id != ?\n" +
-            "\t\t\t\t GROUP BY l1.user_id\n" +
-            "\t\t\t\t ORDER BY count(*) desc\n" +
-            "\t\t\t )\n" +
-            "    SELECT f.*\n" +
-            "      FROM LIKES l1 \n" +
-            "     INNER JOIN prep P\n" +
-            "        ON p.USER_id = l1.USER_ID\n" +
-            "      LEFT JOIN likes l2 \n" +
-            "        ON L2.FILM_ID = l1.FILM_ID \n" +
-            "       AND l2.USER_ID = ?\n" +
-            "     INNER JOIN films f\n" +
-            "        ON f.FILM_ID = l1.FILM_ID \n" +
-            "     WHERE l2.film_id IS null\n" +
-            "     ORDER BY P.cnt desc";
     private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE USER_ID = ?";
     private static final String DELETE_USER_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? OR FRIEND_ID = ?";
     private static final String DELETE_USER_LIKE_QUERY = "DELETE FROM LIKES WHERE USER_ID = ?";
@@ -98,6 +75,9 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
      */
     @Override
     public User createUser(User user) {
+        if (user.getName().isEmpty()) {
+            user.setName(user.getLogin());
+        }
         long id = insertWithGenId(
                 INSERT_QUERY,
                 user.getName(),
@@ -218,10 +198,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return userFriendsSet.stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
-    }
-
-    public List<Film> getRecommendations(long id) {
-        return filmDbStorage.findMany(GET_USER_LIKES_QUERY, id, id, id);
     }
 
     public void deleteUser(long userId) {
