@@ -116,7 +116,8 @@ public class FilmController {
      * @return список фильмов одного режиссера, отсортированный по указанному параметру
      */
     @GetMapping("/director/{directorId}")
-    public List<Film> getDirectorFilms(@PathVariable("directorId") Long id, @RequestParam(defaultValue = "year") String sortBy) {
+    public List<Film> getDirectorFilms(@PathVariable("directorId") Long id,
+                                       @RequestParam(defaultValue = "year") String sortBy) {
         return filmDbService.getDirectorFilms(id, sortBy);
     }
 

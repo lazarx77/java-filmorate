@@ -17,6 +17,7 @@ import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Репозиторий для работы с фильмами в базе данных.
@@ -127,20 +128,26 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
                 film.getDescription(), film.getMpa().getId());
         Set<Genre> genres = film.getGenres();
-        if (genres != null) {
+        Set<Genre> sortedGenres = new HashSet<>();
+        if (genres != null && !genres.isEmpty()) {
             for (Genre genre : genres) {
                 genreDbValidator.checkGenreId(genre.getId());
             }
-            for (Genre genre : genres) {
+            sortedGenres = genres.stream()
+                    .sorted(Comparator.comparing(Genre::getId))
+                    .collect(Collectors.toCollection(LinkedHashSet::new)); // Используем LinkedHashSet для сохранения порядка
+
+            for (Genre genre : sortedGenres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(INSERT_FILM_GENRE_QUERY, id, genre.getId());
             }
         }
         Set<Director> directors = film.getDirectors();
-        if (directors != null) {
+        if (directors != null && !directors.isEmpty()) {
             for (Director director : directors) {
                 directorDbValidatorService.checkDirectorId(director.getId());
             }
+
             for (Director director : directors) {
                 director.setName(directorDbService.findDirectorNameById(director.getId()));
                 insert(INSERT_FILM_DIRECTOR_QUERY, id, director.getId());
@@ -149,6 +156,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
+        film.setGenres(sortedGenres);
 
         return film;
     }
@@ -167,7 +175,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 genreDbValidator.checkGenreId(genre.getId());
             }
             delete(DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
-            for (Genre genre : genres) {
+            Set<Genre> sortedGenres = Set.copyOf(genres.stream().sorted(Comparator.comparing(Genre::getId))
+                    .collect(Collectors.toList()));
+            for (Genre genre : sortedGenres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(INSERT_FILM_GENRE_QUERY, updatedFilm.getId(), genre.getId());
             }
@@ -182,6 +192,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 d.setName(directorDbService.findDirectorNameById(d.getId()));
                 insert(INSERT_FILM_DIRECTOR_QUERY, updatedFilm.getId(), d.getId());
             }
+        } else {
+            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
         }
 
         update(

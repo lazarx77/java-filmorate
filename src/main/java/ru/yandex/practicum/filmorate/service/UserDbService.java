@@ -46,7 +46,7 @@ public class UserDbService {
      * @throws ValidationException Если данные пользователя некорректны.
      */
     public User createUser(User user) {
-        userDbValidator.checkUserFieldsOnCreate(user);
+//        userDbValidator.checkUserFieldsOnCreate(user);
         return userDbStorage.createUser(user);
     }
 

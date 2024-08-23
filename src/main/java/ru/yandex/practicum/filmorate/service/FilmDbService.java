@@ -33,6 +33,7 @@ public class FilmDbService {
     private final UserDbService userDbService;
     private final GenreDbService genreDbService;
     private final HistoryDbStorage historyDbStorage;
+    private final DirectorDbService directorDbService;
 
     /**
      * Возвращает коллекцию всех фильмов.
@@ -70,6 +71,10 @@ public class FilmDbService {
     public Film update(Film updatedFilm) {
         log.info("Проверка налиячия Id у фильма при обновлении: {}.", updatedFilm.getName());
         FieldsValidatorService.validateFilmId(updatedFilm);
+        log.info("Проверка существования фильма в базе данных: {}.", updatedFilm.getName());
+        if (filmDbStorage.findById(updatedFilm.getId()).isEmpty()) {
+            throw new NotFoundException("Фильм с id " + updatedFilm.getId() + " не найден");
+        };
         log.info("Проверка даты выпуска фильма при обновлении: {}.", updatedFilm.getName());
         FieldsValidatorService.validateReleaseDate(updatedFilm);
         log.info("Проверка полей фильма при обновлении: {}.", updatedFilm.getName());
@@ -190,6 +195,8 @@ public class FilmDbService {
      * @throws IllegalArgumentException Если параметр sortBy имеет недопустимое значение.
      */
     public List<Film> getDirectorFilms(Long id, String sortBy) {
+        log.info("проверка существования режиссера с id {}.", id);
+        directorDbService.findById(id);
         Comparator<Film> comparator = switch (sortBy) {
             case "year" -> Comparator.comparing(Film::getReleaseDate);
             case "likes" -> Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());

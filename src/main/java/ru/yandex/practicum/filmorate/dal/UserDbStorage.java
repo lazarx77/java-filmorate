@@ -58,6 +58,24 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             "        ON f.FILM_ID = l1.FILM_ID \n" +
             "     WHERE l2.film_id IS null\n" +
             "     ORDER BY P.cnt desc";
+//    private static final String GET_USER_LIKES_QUERY = "WITH prep AS (\n" +
+//        "    SELECT l1.USER_ID,\n" +
+//        "           COUNT(*) AS cnt\n" +
+//        "      FROM likes l1\n" +
+//        "     INNER JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID\n" +
+//        "                        AND l2.USER_ID = ?\n" +
+//        "     WHERE l1.USER_ID != ?\n" +
+//        "     GROUP BY l1.USER_ID\n" +
+//        "     ORDER BY COUNT(*) DESC\n" +
+//        ")\n" +
+//        "SELECT f.*\n" +
+//        "  FROM LIKES l1\n" +
+//        " INNER JOIN prep p ON p.USER_ID = l1.USER_ID\n" +
+//        " LEFT JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID\n" +
+//        "                   AND l2.USER_ID = ?\n" +
+//        " INNER JOIN films f ON f.FILM_ID = l1.FILM_ID\n" +
+//        " WHERE l2.FILM_ID IS NULL\n" +
+//        " ORDER BY p.cnt DESC";
     private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE USER_ID = ?";
     private static final String DELETE_USER_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? OR FRIEND_ID = ?";
     private static final String DELETE_USER_LIKE_QUERY = "DELETE FROM LIKES WHERE USER_ID = ?";
@@ -98,6 +116,9 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
      */
     @Override
     public User createUser(User user) {
+        if(user.getName().isEmpty()) {
+            user.setName(user.getLogin());
+        }
         long id = insertWithGenId(
                 INSERT_QUERY,
                 user.getName(),
