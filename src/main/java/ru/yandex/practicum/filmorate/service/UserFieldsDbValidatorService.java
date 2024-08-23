@@ -49,31 +49,5 @@ public class UserFieldsDbValidatorService extends BaseRepository<User> {
         if (findOne(FIND_BY_ID, updatedUser.getId()).isEmpty()) {
             throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
         }
-//        if (findOne(FIND_BY_EMAIL_AND_USER_ID, updatedUser.getEmail(), updatedUser.getId()).isPresent()) {
-//            throw new ValidationException("Этот имейл " + updatedUser.getEmail() + " уже используется");
-//        }
     }
-
-//    /**
-//     * Проверяет корректность полей пользователя при его создании.
-//     * <p>
-//     * Метод проверяет, существует ли пользователь с указанным email или логином.
-//     * Если email уже используется, выбрасывается ValidationException.
-//     * Если логин уже используется, выбрасывается ValidationException.
-//     * </p>
-//     *
-//     * @param user Объект User, содержащий данные нового пользователя.
-//     *             Не должен быть null.
-//     * @throws ValidationException Если email или логин уже используются другими пользователями.
-//     */
-//    protected void checkUserFieldsOnCreate(User user) {
-//        log.info("Проверка полей пользователя при его создании; {}", user.getLogin());
-//        findOne(FIND_BY_EMAIL, user.getEmail());
-//        if (findOne(FIND_BY_EMAIL, user.getEmail()).isPresent()) {
-//            throw new ValidationException("Этот имейл " + user.getEmail() + " уже используется");
-//        }
-//        if (findOne(FIND_BY_LOGIN, user.getLogin()).isPresent()) {
-//            throw new ValidationException("Пользователь с таким логином " + user.getLogin() + " уже существует.");
-//        }
-//    }
 }

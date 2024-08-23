@@ -135,8 +135,8 @@ public class FilmController {
     /**
      * searchFilm - поиск фильмов по названию и режиссеру.
      *
-     * @param query  значаение для поиска
-     * @param by поиск выполнять по названию фильма, режиссера или вместе
+     * @param query значаение для поиска
+     * @param by    поиск выполнять по названию фильма, режиссера или вместе
      * @return результат поиска
      */
     @GetMapping("/search")
@@ -144,6 +144,4 @@ public class FilmController {
                                  @RequestParam("by") String by) {
         return filmDbService.searchFilms(query, by);
     }
-
-
 }

@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FeedService;
+import ru.yandex.practicum.filmorate.service.FilmDbService;
 import ru.yandex.practicum.filmorate.service.UserDbService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -27,11 +28,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserStorage userStorage;
-    private final UserService userService;
-    //    private final UserDbStorage userDbStorage;
     private final UserDbService userDbService;
     private final FeedService feedService;
+    private final FilmDbService filmDbService;
 
     /**
      * getAll - получает список всех пользователей.
@@ -127,7 +126,7 @@ public class UserController {
 
     @GetMapping("/{id}/recommendations")
     public List<Film> getRecommendations(@PathVariable("id") long id) {
-        return userDbService.getRecommendations(id);
+        return filmDbService.getRecommendations(id);
     }
 
     /**

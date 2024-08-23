@@ -35,6 +35,4 @@ public class DirectorDbValidatorService extends BaseRepository<Director> {
         if (findOne(FIND_BY_ID, id).isEmpty())
             throw new NotFoundException("Режиссер с id " + id + " не существует");
     }
-
-
 }

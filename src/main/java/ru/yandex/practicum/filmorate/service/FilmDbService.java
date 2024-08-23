@@ -74,7 +74,8 @@ public class FilmDbService {
         log.info("Проверка существования фильма в базе данных: {}.", updatedFilm.getName());
         if (filmDbStorage.findById(updatedFilm.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id " + updatedFilm.getId() + " не найден");
-        };
+        }
+        ;
         log.info("Проверка даты выпуска фильма при обновлении: {}.", updatedFilm.getName());
         FieldsValidatorService.validateReleaseDate(updatedFilm);
         log.info("Проверка полей фильма при обновлении: {}.", updatedFilm.getName());
@@ -250,5 +251,9 @@ public class FilmDbService {
                     return matchTitle || matchDirector || matchBoth;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public List<Film> getRecommendations(long id) {
+        return filmDbStorage.getRecommendations(id);
     }
 }

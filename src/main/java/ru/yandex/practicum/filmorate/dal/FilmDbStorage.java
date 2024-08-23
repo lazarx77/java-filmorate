@@ -75,6 +75,25 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String DELETE_FILM_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE FILM_ID = ?";
     private static final String DELETE_FILM_EVENT_QUERY = "DELETE FROM HISTORY_ACTIONS " +
             "WHERE ENTITY_ID = ? AND TYPE IN('LIKE', 'REVIEW')";
+    private static final String GET_USER_LIKES_QUERY = """
+            WITH prep AS (
+                SELECT l1.USER_ID,
+                       COUNT(*) AS cnt
+                  FROM likes l1
+                 INNER JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+                                    AND l2.USER_ID = ?
+                 WHERE l1.USER_ID != ?
+                 GROUP BY l1.USER_ID
+                 ORDER BY COUNT(*) DESC
+            )
+            SELECT f.*
+              FROM LIKES l1
+             INNER JOIN prep p ON p.USER_ID = l1.USER_ID
+             LEFT JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+                               AND l2.USER_ID = ?
+             INNER JOIN films f ON f.FILM_ID = l1.FILM_ID
+             WHERE l2.FILM_ID IS NULL
+             ORDER BY p.cnt DESC""";
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final RowMapper<Director> directorMapper = new DirectorRowMapper();
@@ -278,5 +297,16 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         delete(DELETE_FILM_EVENT_QUERY, filmId);
         delete(DELETE_FILM_GENRE_QUERY, filmId);
         delete(DELETE_FILM_QUERY, filmId);
+    }
+
+    public List<Film> getRecommendations(long id) {
+        List<Film> films = findMany(GET_USER_LIKES_QUERY, id, id, id);
+        for (Film film : films) {
+            film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
+            film.setMpa(mpaDbService.findById(film.getMpa().getId()));
+            film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+            film.setDirectors(new HashSet<>(directorDbService.findDirectorsByFilmId(film.getId())));
+        }
+        return films;
     }
 }
