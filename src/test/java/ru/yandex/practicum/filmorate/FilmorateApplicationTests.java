@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import ru.yandex.practicum.filmorate.dal.*;
@@ -33,7 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
         FilmDbService.class, FilmRowMapper.class, GenreDbService.class, GenreRowMapper.class,
         MpaFieldsDbValidator.class, MpaRowMapper.class, FieldsValidatorService.class,
         FilmFieldsDbValidatorService.class, UserFieldsDbValidatorService.class,
-        HistoryDbStorage.class, EventRowMapper.class})
+        HistoryDbStorage.class, EventRowMapper.class, DirectorDbService.class, DirectorDbStorage.class,
+        DirectorRowMapper.class, DirectorDbValidatorService.class})
 class FilmorateApplicationTests {
 
     private final UserDbService userDbService;

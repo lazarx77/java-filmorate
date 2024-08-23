@@ -17,8 +17,8 @@ public class ReviewRowMapper implements RowMapper<Review> {
     /**
      * Преобразует строку результата SQL-запроса в объект Review.
      *
-     * @param rs      объект ResultSet, содержащий данные из базы данных
-     * @param rowNum  номер строки, которую необходимо преобразовать
+     * @param rs     объект ResultSet, содержащий данные из базы данных
+     * @param rowNum номер строки, которую необходимо преобразовать
      * @return объект Review, содержащий данные из строки результата
      * @throws SQLException если возникает ошибка при извлечении данных из ResultSet
      */

@@ -25,7 +25,7 @@ public interface ReviewStorage {
      * Получает список отзывов для указанного фильма.
      *
      * @param filmId идентификатор фильма
-     * @param count количество отзывов, которые необходимо вернуть
+     * @param count  количество отзывов, которые необходимо вернуть
      * @return список отзывов для указанного фильма
      */
     List<Review> getReviewsForFilm(Long filmId, Integer count);
@@ -57,7 +57,7 @@ public interface ReviewStorage {
      * Добавляет лайк к отзыву.
      *
      * @param reviewId идентификатор отзыва, к которому добавляется лайк
-     * @param userId идентификатор пользователя, который ставит лайк
+     * @param userId   идентификатор пользователя, который ставит лайк
      */
     void addLikeInReview(Long reviewId, Long userId);
 
@@ -65,7 +65,7 @@ public interface ReviewStorage {
      * Добавляет дизлайк к отзыву.
      *
      * @param reviewId идентификатор отзыва, к которому добавляется дизлайк
-     * @param userId идентификатор пользователя, который ставит дизлайк
+     * @param userId   идентификатор пользователя, который ставит дизлайк
      */
     void addDislikeInReview(Long reviewId, Long userId);
 
@@ -73,7 +73,7 @@ public interface ReviewStorage {
      * Удаляет лайк с отзыва.
      *
      * @param reviewId идентификатор отзыва, с которого удаляется лайк
-     * @param userId идентификатор пользователя, который удаляет лайк
+     * @param userId   идентификатор пользователя, который удаляет лайк
      */
     void deleteLikeInReview(Long reviewId, Long userId);
 
@@ -81,7 +81,7 @@ public interface ReviewStorage {
      * Удаляет дизлайк с отзыва.
      *
      * @param reviewId идентификатор отзыва, с которого удаляется дизлайк
-     * @param userId идентификатор пользователя, который удаляет дизлайк
+     * @param userId   идентификатор пользователя, который удаляет дизлайк
      */
     void deleteDislikeInReview(Long reviewId, Long userId);
 }
