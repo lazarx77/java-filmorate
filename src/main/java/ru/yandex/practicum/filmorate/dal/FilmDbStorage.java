@@ -131,7 +131,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
-            film.setDirectors(new HashSet<>(directorDbService.findDirectorsByFilmId(film.getId())));
+            List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());
+            for (Director director : directors) {
+                director.setName(directorDbService.findDirectorNameById(director.getId()));
+            }
+            film.setDirectors(new HashSet<>(directors));
         }
         return films;
     }
@@ -305,7 +309,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
-            film.setDirectors(new HashSet<>(directorDbService.findDirectorsByFilmId(film.getId())));
+            List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());
+            for (Director director : directors) {
+                director.setName(directorDbService.findDirectorNameById(director.getId()));
+            }
+            film.setDirectors(new HashSet<>(directors));
         }
         return films;
     }

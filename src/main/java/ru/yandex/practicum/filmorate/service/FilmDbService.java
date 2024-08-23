@@ -250,6 +250,11 @@ public class FilmDbService {
                                             .anyMatch(director -> director.getName().toLowerCase().contains(query.toLowerCase())));
                     return matchTitle || matchDirector || matchBoth;
                 })
+                .sorted(Comparator.comparing((Film film) -> {
+                    boolean directorMatch = searchBy.length == 2 && film.getDirectors().stream()
+                            .anyMatch(director -> director.getName().toLowerCase().contains(query.toLowerCase()));
+                    return directorMatch ? 0 : 1;
+                }))
                 .collect(Collectors.toList());
     }
 
