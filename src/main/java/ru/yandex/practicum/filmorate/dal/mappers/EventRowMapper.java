@@ -9,7 +9,10 @@ import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-@Component
+/**
+ * Класс EventRowMapper предназначен для преобразования строк результата SQL-запроса
+ * в объекты класса Event. Он реализует интерфейс RowMapper из Spring JDBC.
+ */
 public class EventRowMapper implements RowMapper<Event> {
     /**
      * Преобразует строку результата SQL-запроса в объект Film.

@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.model.Director;
 
 import java.util.List;
 
-
 /**
  * Репозиторий для управления данными о режиссерах в базе данных.
  * <p>
