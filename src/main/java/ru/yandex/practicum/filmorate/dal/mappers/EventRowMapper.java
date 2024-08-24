@@ -13,6 +13,7 @@ import java.sql.SQLException;
  * Класс EventRowMapper предназначен для преобразования строк результата SQL-запроса
  * в объекты класса Event. Он реализует интерфейс RowMapper из Spring JDBC.
  */
+@Component
 public class EventRowMapper implements RowMapper<Event> {
     /**
      * Преобразует строку результата SQL-запроса в объект Film.

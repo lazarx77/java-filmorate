@@ -8,11 +8,16 @@ import ru.yandex.practicum.filmorate.model.Event;
 
 import java.util.Collection;
 
+/**
+ * Класс для работы с историей действий пользователей в базе данных.
+ * Позволяет добавлять события и получать историю событий для конкретного пользователя.
+ */
 @Slf4j
 @Repository
 public class HistoryDbStorage extends BaseRepository<Event> {
     // SQL-запросы
-    private static final String INSERT_QUERY = "INSERT INTO HISTORY_ACTIONS(USER_ID, TIME_ACTION, TYPE, OPERATION, ENTITY_ID)" +
+    private static final String INSERT_QUERY = "INSERT INTO HISTORY_ACTIONS(USER_ID, TIME_ACTION, TYPE, OPERATION," +
+            " ENTITY_ID)" +
             " VALUES (?,?,?,?,?)";
     private static final String FIND_EVENT_BY_USER_ID_QUERY = "SELECT * FROM HISTORY_ACTIONS WHERE USER_ID = ?";
 

@@ -133,16 +133,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     }
 
     /**
-     * Вспомогательный метод для получения коллекции идентификаторов друзей пользователя.
-     *
-     * @param id Идентификатор пользователя.
-     * @return Множество идентификаторов друзей.
-     */
-    private Set<Long> getFriendsSet(Long id) {
-        return new HashSet<>(findManyInstances(FIND_FRIENDS_IDS, Long.class, id));
-    }
-
-    /**
      * Удаляет пользователя из друзей.
      *
      * @param userId   Идентификатор пользователя, который удаляет друга.
@@ -200,5 +190,15 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         delete(DELETE_USER_LIKE_QUERY, userId);
         deleteByTwoIds(DELETE_USER_FRIEND_QUERY, userId, userId);
         delete(DELETE_USER_QUERY, userId);
+    }
+
+    /**
+     * Вспомогательный метод для получения коллекции идентификаторов друзей пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Множество идентификаторов друзей.
+     */
+    private Set<Long> getFriendsSet(Long id) {
+        return new HashSet<>(findManyInstances(FIND_FRIENDS_IDS, Long.class, id));
     }
 }
