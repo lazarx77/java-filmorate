@@ -72,8 +72,13 @@ public class ReviewService {
         if (review.getUserId() <= 0 || review.getFilmId() <= 0) {
             throw new NotFoundException("ID must be positive");
         }
-        reviewDbStorage.getReview(review.getReviewId());
-        filmDbService.findById(review.getFilmId());
+        long userId = getReview(review.getReviewId()).getUserId();
+        long filmId = getReview(review.getReviewId()).getFilmId();
+        if (userId != review.getUserId() || filmId != review.getFilmId()) {
+            review.setUserId(userId);
+            review.setFilmId(filmId);
+            review.setUseful(0);
+        }
         userDbService.findById(review.getUserId());
         return reviewDbStorage.updateReview(review);
     }

@@ -13,10 +13,20 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.*;
+import ru.yandex.practicum.filmorate.service.DirectorDbService;
+import ru.yandex.practicum.filmorate.service.DirectorDbValidatorService;
+import ru.yandex.practicum.filmorate.service.GenreDbService;
+import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
+import ru.yandex.practicum.filmorate.service.MpaDbService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -73,8 +83,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
     private static final String DELETE_FILM_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ?";
     private static final String DELETE_FILM_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE FILM_ID = ?";
-    private static final String DELETE_FILM_EVENT_QUERY = "DELETE FROM HISTORY_ACTIONS " +
-            "WHERE ENTITY_ID = ? AND TYPE IN('LIKE', 'REVIEW')";
     private static final String GET_USER_LIKES_QUERY = """
             WITH prep AS (
                 SELECT l1.USER_ID,
@@ -116,8 +124,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
-
-    private final FilmFieldsDbValidatorService filmDbValidator = new FilmFieldsDbValidatorService(jdbc, mapper);
 
     /**
      * Получает все фильмы из базы данных.
@@ -291,6 +297,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         List<Film> result = super.findMany(COMMON_FILMS_QUERY, userId, friendId);
         for (Film film : result) {
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+            film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         }
         return result;
     }
@@ -298,7 +305,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public void deleteFilm(long filmId) {
         delete(DELETE_FILM_REVIEW_QUERY, filmId);
         delete(DELETE_FILM_LIKE_QUERY, filmId);
-        delete(DELETE_FILM_EVENT_QUERY, filmId);
         delete(DELETE_FILM_GENRE_QUERY, filmId);
         delete(DELETE_FILM_QUERY, filmId);
     }

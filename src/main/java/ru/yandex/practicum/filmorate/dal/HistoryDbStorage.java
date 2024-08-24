@@ -36,7 +36,7 @@ public class HistoryDbStorage extends BaseRepository<Event> {
                 event.getEntityId()
         );
         event.setEventId(id);
-        log.info("Добавлено действие {} {} = {} пользователя c ID = {}", event.getEventType().toString(),
+        log.info("Создан ЭВЕНТ c ID {}. Добавлено действие {} {} = {} пользователя c ID = {}", event.getEventId(), event.getEventType().toString(),
                 event.getOperation().toString(), event.getEntityId(), event.getUserId());
         return event;
     }

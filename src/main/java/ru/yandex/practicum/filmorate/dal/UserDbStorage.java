@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
 @Repository
 @Qualifier("UserDbStorage")
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
-    private final FilmDbStorage filmDbStorage = new FilmDbStorage(super.jdbc, new FilmRowMapper());
     // SQL-запросы
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM USERS WHERE USER_ID = ?";
     private static final String FIND_ALL_QUERY = "SELECT * FROM USERS";
@@ -38,9 +36,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE USER_ID = ?";
     private static final String DELETE_USER_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? OR FRIEND_ID = ?";
     private static final String DELETE_USER_LIKE_QUERY = "DELETE FROM LIKES WHERE USER_ID = ?";
-    private static final String DELETE_USER_HISTORY_QUERY = "DELETE FROM HISTORY_ACTIONS WHERE USER_ID = ?";
-    private static final String DELETE_USER_EVENT_QUERY = "DELETE FROM HISTORY_ACTIONS " +
-            "WHERE ENTITY_ID = ? AND TYPE = 'FRIEND'";
     private static final String DELETE_USER_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE USER_ID = ?";
 
     /**
@@ -202,8 +197,6 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     public void deleteUser(long userId) {
         delete(DELETE_USER_REVIEW_QUERY, userId);
-        delete(DELETE_USER_HISTORY_QUERY, userId);
-        delete(DELETE_USER_EVENT_QUERY, userId);
         delete(DELETE_USER_LIKE_QUERY, userId);
         deleteByTwoIds(DELETE_USER_FRIEND_QUERY, userId, userId);
         delete(DELETE_USER_QUERY, userId);
