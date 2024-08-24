@@ -94,8 +94,7 @@ public class FieldsValidatorService {
      *
      * @param updatedUser - объект класса User с обновленными данными.
      * @param users       - коллекция всех существующих пользователей.
-     * @throws NotFoundException   - если пользователь с указанным идентификатором не найден.
-     * @throws ValidationException - если обновленный пользователь (имеил) уже существует в коллекции.
+     * @throws NotFoundException - если пользователь с указанным идентификатором не найден.
      */
     public static void validateUpdateUserFields(User updatedUser, Map<Long, User> users) {
 
@@ -121,6 +120,16 @@ public class FieldsValidatorService {
         }
     }
 
+    /**
+     * Проверяет корректность идентификатора режиссера.
+     * <p>
+     * Данный метод проверяет, что идентификатор (ID) объекта {@link Director} не является null.
+     * Если идентификатор не указан, выбрасывается {@link ValidationException} с соответствующим сообщением.
+     * </p>
+     *
+     * @param director Объект режиссера, идентификатор которого необходимо проверить.
+     * @throws ValidationException Если идентификатор режиссера равен null.
+     */
     public static void validateDirectorId(Director director) {
         if (director.getId() == null) {
             throw new ValidationException("Id должен быть указан");

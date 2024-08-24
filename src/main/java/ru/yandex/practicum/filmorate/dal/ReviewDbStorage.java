@@ -180,55 +180,6 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
     }
 
     /**
-     * Сохраняет событие (например, добавление, обновление, удаление отзыва) в историю.
-     *
-     * @param id             идентификатор отзыва
-     * @param userId         идентификатор пользователя, связанного с событием
-     * @param operationTypes тип операции (добавление, обновление, удаление)
-     */
-    private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
-        historyDbStorage.addEvent(Event.builder()
-                .userId(userId)
-                .timestamp(System.currentTimeMillis())
-                .eventType(EventTypes.REVIEW)
-                .operation(operationTypes)
-                .entityId(id)
-                .build());
-    }
-
-    /**
-     * Повышает полезность отзыва (увеличивает значение useful).
-     *
-     * @param reviewId идентификатор отзыва, полезность которого необходимо повысить
-     */
-    private void increaseToUseful(Long reviewId) {
-        log.info("Повышение рейтинга полезности отзыва");
-        update(UPDATE_USEFUL_UP_QUERY, reviewId);
-    }
-
-    /**
-     * Понижает полезность отзыва (уменьшает значение useful).
-     *
-     * @param reviewId идентификатор отзыва, полезность которого необходимо понизить
-     */
-    private void downgradeToUseful(Long reviewId) {
-        log.info("Понижение рейтинга полезности отзыва");
-        update(UPDATE_USEFUL_DOWN_QUERY, reviewId);
-    }
-
-    /**
-     * Проверяет, существует ли лайк или дизлайк на отзыв от конкретного пользователя.
-     *
-     * @param reviewId идентификатор отзыва
-     * @param userId   идентификатор пользователя
-     * @return true, если лайк или дизлайк существует, иначе false
-     */
-    private boolean isLikeOrDislike(Long reviewId, Long userId) {
-        Optional<String> like = findOneInstances(FIND_LIKE_OR_DISLIKE_QUERY, reviewId, userId);
-        return like.isPresent();
-    }
-
-    /**
      * Добавляет лайк на отзыв.
      * Если у пользователя уже есть дизлайк, он удаляется.
      * Увеличивает значение полезности отзыва.
@@ -292,5 +243,54 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
         deleteByTwoIdsAndLike(DELETE_LIKE_OR_DISLIKE_IN_REVIEW_QUERY, reviewId, userId, DISLIKE);
         log.info("Дислайк удалён с отзыва ИД: {}", reviewId);
         increaseToUseful(reviewId);
+    }
+
+    /**
+     * Сохраняет событие (например, добавление, обновление, удаление отзыва) в историю.
+     *
+     * @param id             идентификатор отзыва
+     * @param userId         идентификатор пользователя, связанного с событием
+     * @param operationTypes тип операции (добавление, обновление, удаление)
+     */
+    private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.REVIEW)
+                .operation(operationTypes)
+                .entityId(id)
+                .build());
+    }
+
+    /**
+     * Повышает полезность отзыва (увеличивает значение useful).
+     *
+     * @param reviewId идентификатор отзыва, полезность которого необходимо повысить
+     */
+    private void increaseToUseful(Long reviewId) {
+        log.info("Повышение рейтинга полезности отзыва");
+        update(UPDATE_USEFUL_UP_QUERY, reviewId);
+    }
+
+    /**
+     * Понижает полезность отзыва (уменьшает значение useful).
+     *
+     * @param reviewId идентификатор отзыва, полезность которого необходимо понизить
+     */
+    private void downgradeToUseful(Long reviewId) {
+        log.info("Понижение рейтинга полезности отзыва");
+        update(UPDATE_USEFUL_DOWN_QUERY, reviewId);
+    }
+
+    /**
+     * Проверяет, существует ли лайк или дизлайк на отзыв от конкретного пользователя.
+     *
+     * @param reviewId идентификатор отзыва
+     * @param userId   идентификатор пользователя
+     * @return true, если лайк или дизлайк существует, иначе false
+     */
+    private boolean isLikeOrDislike(Long reviewId, Long userId) {
+        Optional<String> like = findOneInstances(FIND_LIKE_OR_DISLIKE_QUERY, reviewId, userId);
+        return like.isPresent();
     }
 }

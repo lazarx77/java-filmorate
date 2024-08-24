@@ -1,5 +1,11 @@
 # java-filmorate
-Filmorate project by The First Group. Sprint 13.
+Filmorate project by The First Group - Sprint 13
+by:
+Barinov Rodion,
+Galkin Anton,
+Korsakov Alexander,
+Lazarenko Oleg (team lead),
+Stepanov Dmitry.
 
 ![Database project.](/filmorate.png)
 

@@ -13,20 +13,10 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.DirectorDbService;
-import ru.yandex.practicum.filmorate.service.DirectorDbValidatorService;
-import ru.yandex.practicum.filmorate.service.GenreDbService;
-import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
-import ru.yandex.practicum.filmorate.service.MpaDbService;
+import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +30,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     // SQL-запросы
     private static final String DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
-    private static final String DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_DIRECTORS WHERE FILM_ID = ?";
+    private static final String DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_DIRECTORS" +
+            " WHERE FILM_ID = ?";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
     private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
@@ -48,7 +39,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(FILM_ID, USER_ID) VALUES (?,?)";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
-    private static final String INSERT_FILM_DIRECTOR_QUERY = "INSERT INTO FILMS_DIRECTORS(FILM_ID, DIRECTOR_ID) VALUES (?,?)";
+    private static final String INSERT_FILM_DIRECTOR_QUERY = "INSERT INTO FILMS_DIRECTORS(FILM_ID, DIRECTOR_ID)" +
+            " VALUES (?,?)";
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
@@ -110,7 +102,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private final GenreFieldsDbValidator genreDbValidator = new GenreFieldsDbValidator(jdbc, genreMapper);
     private final GenreDbService genreDbService = new GenreDbService(new GenreDbStorage(jdbc, genreMapper));
 
-    private final DirectorDbValidatorService directorDbValidatorService = new DirectorDbValidatorService(jdbc, directorMapper);
+    private final DirectorDbValidatorService directorDbValidatorService =
+            new DirectorDbValidatorService(jdbc, directorMapper);
 
     private final DirectorDbService directorDbService = new DirectorDbService(new DirectorDbStorage(jdbc,
             directorMapper), directorDbValidatorService);
@@ -164,7 +157,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             }
             sortedGenres = genres.stream()
                     .sorted(Comparator.comparing(Genre::getId))
-                    .collect(Collectors.toCollection(LinkedHashSet::new)); // Используем LinkedHashSet для сохранения порядка
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
 
             for (Genre genre : sortedGenres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
