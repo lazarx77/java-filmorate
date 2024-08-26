@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -13,7 +13,6 @@ import java.util.Map;
  * FieldsValidatorService - класс для валидации полей фильмов и пользователей.
  * Проверяет корректность данных при создании, обновлении и удалении объектов.
  */
-@Slf4j
 public class FieldsValidatorService {
 
     private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
@@ -79,23 +78,6 @@ public class FieldsValidatorService {
     }
 
     /**
-     * emailDoubleValidator проверяет уникальность пользователя.
-     *
-     * @param user  - объект класса User с обновленными данными.
-     * @param users - коллекция всех существующих всех пользователей.
-     * @throws ValidationException - если имейл уже используется.
-     */
-    public static void emailDoubleValidator(User user, Map<Long, User> users) {
-        for (Long id : users.keySet()) {
-            User middleUser = users.get(id);
-            if (user.getEmail().equals(middleUser.getEmail())) {
-                throw new ValidationException("Этот имейл уже используется");
-            }
-        }
-    }
-
-
-    /**
      * validateUserId проверяет, что у пользователя задан идентификатор.
      *
      * @param user - объект класса Film, для которого проверяется наличие идентификатора.
@@ -112,23 +94,12 @@ public class FieldsValidatorService {
      *
      * @param updatedUser - объект класса User с обновленными данными.
      * @param users       - коллекция всех существующих пользователей.
-     * @throws NotFoundException   - если пользователь с указанным идентификатором не найден.
-     * @throws ValidationException - если обновленный пользователь (имеил) уже существует в коллекции.
+     * @throws NotFoundException - если пользователь с указанным идентификатором не найден.
      */
     public static void validateUpdateUserFields(User updatedUser, Map<Long, User> users) {
 
         if (!users.containsKey(updatedUser.getId())) {
             throw new NotFoundException("Польователь с id = " + updatedUser.getId() + " не найден");
-        }
-
-        if (!updatedUser.getEmail().equals(users.get(updatedUser.getId()).getEmail())) {
-            for (Long id : users.keySet()) {
-                User middleUser = users.get(id);
-                if (updatedUser.getEmail().equals(middleUser.getEmail())) {
-                    throw new ValidationException("Имейл " + updatedUser.getEmail() + " уже присвоен другому " +
-                            "пользователю: " + middleUser.getLogin());
-                }
-            }
         }
 
         User oldUser = users.get(updatedUser.getId());
@@ -146,6 +117,22 @@ public class FieldsValidatorService {
 
         if (updatedUser.getBirthday() == null) {
             updatedUser.setBirthday(oldUser.getBirthday());
+        }
+    }
+
+    /**
+     * Проверяет корректность идентификатора режиссера.
+     * <p>
+     * Данный метод проверяет, что идентификатор (ID) объекта {@link Director} не является null.
+     * Если идентификатор не указан, выбрасывается {@link ValidationException} с соответствующим сообщением.
+     * </p>
+     *
+     * @param director Объект режиссера, идентификатор которого необходимо проверить.
+     * @throws ValidationException Если идентификатор режиссера равен null.
+     */
+    public static void validateDirectorId(Director director) {
+        if (director.getId() == null) {
+            throw new ValidationException("Id должен быть указан");
         }
     }
 }

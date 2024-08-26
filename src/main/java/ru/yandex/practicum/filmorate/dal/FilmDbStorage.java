@@ -5,19 +5,19 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.GenreRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.MpaRowMapper;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.FilmFieldsDbValidatorService;
-import ru.yandex.practicum.filmorate.service.GenreDbService;
-import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
-import ru.yandex.practicum.filmorate.service.MpaDbService;
+import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Репозиторий для работы с фильмами в базе данных.
@@ -30,6 +30,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     // SQL-запросы
     private static final String DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
+    private static final String DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY = "DELETE FROM FILMS_DIRECTORS" +
+            " WHERE FILM_ID = ?";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
     private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
@@ -37,17 +39,74 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
     private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(FILM_ID, USER_ID) VALUES (?,?)";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
-
+    private static final String INSERT_FILM_DIRECTOR_QUERY = "INSERT INTO FILMS_DIRECTORS(FILM_ID, DIRECTOR_ID)" +
+            " VALUES (?,?)";
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
-
+    private static final String COMMON_FILMS_QUERY = "    " +
+            "    WITH USER_films AS (\n" +
+            "                        SELECT f.film_id,\n" +
+            "                               count(*) AS cnt\n" +
+            "                          FROM LIKES l\n" +
+            "                         INNER JOIN films f\n" +
+            "                            ON f.film_id = l.film_id\n" +
+            "                         WHERE l.user_id = ?\n" +
+            "                         GROUP BY f.film_id\n" +
+            "                        ),\n" +
+            "       friend_films AS (\n" +
+            "                        SELECT f.film_id,\n" +
+            "                               count(*) AS cnt\n" +
+            "                          FROM LIKES l\n" +
+            "                         INNER JOIN films f\n" +
+            "                            ON f.film_id = l.film_id\n" +
+            "                         WHERE l.user_id = ?\n" +
+            "                         GROUP BY f.film_id\n" +
+            "                       )\n" +
+            "                SELECT f.*\n" +
+            "                  FROM films f\n" +
+            "                 INNER JOIN USER_films u \n" +
+            "                    ON f.FILM_ID = u.film_id\n" +
+            "                 INNER JOIN friend_films ff \n" +
+            "                    ON ff.film_id = f.FILM_ID \n" +
+            "                 ORDER BY u.cnt desc";
+    private static final String DELETE_FILM_QUERY = "DELETE FROM FILMS WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE FILM_ID = ?";
+    private static final String GET_USER_LIKES_QUERY = """
+            WITH prep AS (
+                SELECT l1.USER_ID,
+                       COUNT(*) AS cnt
+                  FROM likes l1
+                 INNER JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+                                    AND l2.USER_ID = ?
+                 WHERE l1.USER_ID != ?
+                 GROUP BY l1.USER_ID
+                 ORDER BY COUNT(*) DESC
+            )
+            SELECT f.*
+              FROM LIKES l1
+             INNER JOIN prep p ON p.USER_ID = l1.USER_ID
+             LEFT JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+                               AND l2.USER_ID = ?
+             INNER JOIN films f ON f.FILM_ID = l1.FILM_ID
+             WHERE l2.FILM_ID IS NULL
+             ORDER BY p.cnt DESC""";
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
+    private final RowMapper<Director> directorMapper = new DirectorRowMapper();
+
     private final MpaDbService mpaDbService = new MpaDbService(new MpaDbStorage(jdbc, mpaMapper));
     private final GenreFieldsDbValidator genreDbValidator = new GenreFieldsDbValidator(jdbc, genreMapper);
     private final GenreDbService genreDbService = new GenreDbService(new GenreDbStorage(jdbc, genreMapper));
+
+    private final DirectorDbValidatorService directorDbValidatorService =
+            new DirectorDbValidatorService(jdbc, directorMapper);
+
+    private final DirectorDbService directorDbService = new DirectorDbService(new DirectorDbStorage(jdbc,
+            directorMapper), directorDbValidatorService);
 
     /**
      * Конструктор для инициализации FilmDbStorage.
@@ -58,8 +117,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
     }
-
-    private final FilmFieldsDbValidatorService filmDbValidator = new FilmFieldsDbValidatorService(jdbc, mapper);
 
     /**
      * Получает все фильмы из базы данных.
@@ -73,8 +130,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
-            System.out.println(film);
-
+            List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());
+            for (Director director : directors) {
+                director.setName(directorDbService.findDirectorNameById(director.getId()));
+            }
+            film.setDirectors(new HashSet<>(directors));
         }
         return films;
     }
@@ -90,18 +150,35 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
                 film.getDescription(), film.getMpa().getId());
         Set<Genre> genres = film.getGenres();
-        if (genres != null) {
+        Set<Genre> sortedGenres = new HashSet<>();
+        if (genres != null && !genres.isEmpty()) {
             for (Genre genre : genres) {
                 genreDbValidator.checkGenreId(genre.getId());
             }
-            for (Genre genre : genres) {
+            sortedGenres = genres.stream()
+                    .sorted(Comparator.comparing(Genre::getId))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            for (Genre genre : sortedGenres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(INSERT_FILM_GENRE_QUERY, id, genre.getId());
             }
         }
+        Set<Director> directors = film.getDirectors();
+        if (directors != null && !directors.isEmpty()) {
+            for (Director director : directors) {
+                directorDbValidatorService.checkDirectorId(director.getId());
+            }
+
+            for (Director director : directors) {
+                director.setName(directorDbService.findDirectorNameById(director.getId()));
+                insert(INSERT_FILM_DIRECTOR_QUERY, id, director.getId());
+            }
+        }
+        film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         film.setId(id);
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
-        film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        film.setGenres(sortedGenres);
 
         return film;
     }
@@ -120,12 +197,26 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 genreDbValidator.checkGenreId(genre.getId());
             }
             delete(DELETE_ALL_GENRES_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
-            for (Genre genre : genres) {
+            Set<Genre> sortedGenres = Set.copyOf(genres.stream().sorted(Comparator.comparing(Genre::getId))
+                    .collect(Collectors.toList()));
+            for (Genre genre : sortedGenres) {
                 genre.setName(genreDbService.findGenreNameById(genre.getId()));
                 insert(INSERT_FILM_GENRE_QUERY, updatedFilm.getId(), genre.getId());
             }
         }
-        filmDbValidator.validateUpdateFilmFields(updatedFilm);
+        Set<Director> director = updatedFilm.getDirectors();
+        if (director != null) {
+            for (Director d : director) {
+                directorDbValidatorService.checkDirectorId(d.getId());
+            }
+            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
+            for (Director d : director) {
+                d.setName(directorDbService.findDirectorNameById(d.getId()));
+                insert(INSERT_FILM_DIRECTOR_QUERY, updatedFilm.getId(), d.getId());
+            }
+        } else {
+            delete(DELETE_ALL_DIRECTORS_ON_FILM_UPDATE_QUERY, updatedFilm.getId());
+        }
 
         update(
                 UPDATE_QUERY, updatedFilm.getName(), updatedFilm.getDescription(), updatedFilm.getReleaseDate(),
@@ -161,6 +252,11 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
         film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        Set<Director> directors = new HashSet<>(directorDbService.findDirectorsByFilmId(id));
+        for (Director director : directors) {
+            director.setName(directorDbService.findDirectorNameById(director.getId()));
+        }
+        film.setDirectors(directors);
         film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(id)));
         return film;
     }
@@ -188,5 +284,36 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
         }
         deleteByTwoIds(DELETE_LIKE_QUERY, filmId, userId);
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        List<Film> result = super.findMany(COMMON_FILMS_QUERY, userId, friendId);
+        for (Film film : result) {
+            film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+            film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
+        }
+        return result;
+    }
+
+    public void deleteFilm(long filmId) {
+        delete(DELETE_FILM_REVIEW_QUERY, filmId);
+        delete(DELETE_FILM_LIKE_QUERY, filmId);
+        delete(DELETE_FILM_GENRE_QUERY, filmId);
+        delete(DELETE_FILM_QUERY, filmId);
+    }
+
+    public List<Film> getRecommendations(long id) {
+        List<Film> films = findMany(GET_USER_LIKES_QUERY, id, id, id);
+        for (Film film : films) {
+            film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
+            film.setMpa(mpaDbService.findById(film.getMpa().getId()));
+            film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
+            List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());
+            for (Director director : directors) {
+                director.setName(directorDbService.findDirectorNameById(director.getId()));
+            }
+            film.setDirectors(new HashSet<>(directors));
+        }
+        return films;
     }
 }

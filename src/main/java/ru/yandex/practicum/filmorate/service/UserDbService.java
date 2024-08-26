@@ -3,10 +3,14 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.HistoryDbStorage;
 import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventTypes;
+import ru.yandex.practicum.filmorate.model.enums.OperationTypes;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +26,7 @@ public class UserDbService {
 
     private final UserFieldsDbValidatorService userDbValidator;
     private final UserDbStorage userDbStorage;
+    private final HistoryDbStorage historyDbStorage;
 
     /**
      * Возвращает список всех пользователей.
@@ -40,7 +45,6 @@ public class UserDbService {
      * @throws ValidationException Если данные пользователя некорректны.
      */
     public User createUser(User user) {
-        userDbValidator.checkUserFieldsOnCreate(user);
         return userDbStorage.createUser(user);
     }
 
@@ -75,6 +79,7 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.addFriend(userId, friendId);
         log.info("Пользователь с id {} добавил в друзья пользователя с id {}.", userId, friendId);
+        saveHistory(friendId, userId, OperationTypes.ADD);
     }
 
     /**
@@ -103,6 +108,7 @@ public class UserDbService {
         findById(friendId).orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
         userDbStorage.deleteFriend(userId, friendId);
         log.info("Пользователь с id {} удален из друзей пользователя с id {}.", userId, friendId);
+        saveHistory(friendId, userId, OperationTypes.REMOVE);
     }
 
     /**
@@ -135,5 +141,40 @@ public class UserDbService {
      */
     public List<User> getCommonFriends(Long userId, Long otherId) {
         return userDbStorage.getCommonFriends(userId, otherId);
+    }
+
+    /**
+     * Удаляет пользователя и все связанные с ним записи из таблиц.
+     *
+     * @param userId Идентификатор пользователя.
+     */
+    public void deleteUser(long userId) {
+        userDbStorage.deleteUser(userId);
+        log.info("Пользователь с id {} удален.", userId);
+    }
+
+    /**
+     * Сохраняет информацию о событии, связанном с действиями пользователя в отношении друзей.
+     * <p>
+     * Данный метод создает и сохраняет новое событие в базе данных, которое фиксирует
+     * операцию, выполненную пользователем в контексте управления друзьями (например, добавление
+     * или удаление друга). Событие включает идентификатор пользователя, временную метку,
+     * тип события (в данном случае {@link EventTypes#FRIEND}), тип операции и идентификатор
+     * сущности, с которой связано событие. Метод использует {@link HistoryDbStorage} для
+     * добавления события в историю.
+     * </p>
+     *
+     * @param id             Идентификатор сущности, с которой связано событие (например, идентификатор друга).
+     * @param userId         Идентификатор пользователя, который выполнил операцию.
+     * @param operationTypes Тип операции, связанной с событием (например, добавление или удаление друга).
+     */
+    private void saveHistory(Long id, Long userId, OperationTypes operationTypes) {
+        historyDbStorage.addEvent(Event.builder()
+                .userId(userId)
+                .timestamp(System.currentTimeMillis())
+                .eventType(EventTypes.FRIEND)
+                .operation(operationTypes)
+                .entityId(id)
+                .build());
     }
 }

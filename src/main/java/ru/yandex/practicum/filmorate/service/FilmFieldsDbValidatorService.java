@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import ru.yandex.practicum.filmorate.dal.BaseRepository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 /**
@@ -36,17 +35,11 @@ public class FilmFieldsDbValidatorService extends BaseRepository<Film> {
      *
      * @param updatedFilm Объект Film, содержащий обновленные данные фильма.
      *                    Не должен быть null.
-     * @throws NotFoundException  Если фильм с указанным идентификатором не найден.
-     * @throws ValidationException Если фильм с таким именем и датой релиза уже существует в базе данных.
+     * @throws NotFoundException Если фильм с указанным идентификатором не найден.
      */
     public void validateUpdateFilmFields(Film updatedFilm) {
         if (findOne(FIND_BY_ID, updatedFilm.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id = " + updatedFilm.getId() + " не найден");
-        }
-
-        if (findOne(FIND_BY_ID, updatedFilm.getId()).get().equals(updatedFilm)) {
-            throw new ValidationException("Фильм с таким именем " + updatedFilm.getName() + "и датой релиза " +
-                    updatedFilm.getReleaseDate() + " уже есть в картотеке.");
         }
     }
 }

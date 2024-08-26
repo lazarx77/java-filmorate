@@ -59,12 +59,16 @@ public class FilmController {
     /**
      * getPopular - возвращает список из count самых популярных фильмов.
      *
-     * @param count количество популярных фильмов для возврата
+     * @param count   количество популярных фильмов для возврата
+     * @param genreId указывает жанр фильмов для возврата
+     * @param year    указывает год фильмов для возврата
      * @return список из count самых популярных фильмов
      */
     @GetMapping("/popular")
-    public List<Film> getPopular(@PathVariable("count") @RequestParam(defaultValue = "10") int count) {
-        return filmDbService.getMostLiked(count);
+    public List<Film> getPopularFilms(@RequestParam(required = false) Integer count,
+                                      @RequestParam(required = false) Integer genreId,
+                                      @RequestParam(required = false) Integer year) {
+        return filmDbService.getPopularFilms(count, genreId, year);
     }
 
     /**
@@ -97,5 +101,47 @@ public class FilmController {
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable("id") Long id) {
         return filmDbService.getFilmById(id);
+    }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam long userId, @RequestParam long friendId) {
+        return filmDbService.getCommonFilms(userId, friendId);
+    }
+
+    /**
+     * getDirectorFilms - возвращает список фильмов одного режиссера, отсортированный по указанному параметру.
+     *
+     * @param id     идентификатор режиссера
+     * @param sortBy параметр сортировки (по умолчанию "year")
+     * @return список фильмов одного режиссера, отсортированный по указанному параметру
+     */
+    @GetMapping("/director/{directorId}")
+    public List<Film> getDirectorFilms(@PathVariable("directorId") Long id,
+                                       @RequestParam(defaultValue = "year") String sortBy) {
+        return filmDbService.getDirectorFilms(id, sortBy);
+    }
+
+    /**
+     * getFilmById - удаляет фильм.
+     *
+     * @param id идентификатор фильма
+     */
+    @DeleteMapping("/{id}")
+    public void deleteFilm(@PathVariable("id") long id) {
+        filmDbService.deleteFilm(id);
+    }
+
+
+    /**
+     * searchFilm - поиск фильмов по названию и режиссеру.
+     *
+     * @param query значаение для поиска
+     * @param by    поиск выполнять по названию фильма, режиссера или вместе
+     * @return результат поиска
+     */
+    @GetMapping("/search")
+    public List<Film> searchFilm(@RequestParam("query") String query,
+                                 @RequestParam("by") String by) {
+        return filmDbService.searchFilms(query, by);
     }
 }

@@ -22,7 +22,7 @@ import java.util.Set;
  */
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"email"})
+@EqualsAndHashCode(of = {"id"})
 public class User {
 
     private Long id;

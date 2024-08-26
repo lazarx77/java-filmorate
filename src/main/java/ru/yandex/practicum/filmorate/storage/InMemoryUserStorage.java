@@ -31,7 +31,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User createUser(User user) {
         log.info("проверка email на дубликат пользователя при его добавлении: {}", user.getLogin());
-        FieldsValidatorService.emailDoubleValidator(user, users);
+//        FieldsValidatorService.emailDoubleValidator(user, users);
         if (user.getName() == null) {
             user.setName(user.getLogin());
         }

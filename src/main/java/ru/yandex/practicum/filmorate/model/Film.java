@@ -32,14 +32,15 @@ public class Film {
     private Long id;
     @NotBlank(message = "Название не может быть пустым")
     private String name;
+    private LocalDate releaseDate;
     @Size(max = DESCRIPTION_MAX_LENGTH, message = "Максимальная длина описания — "
             + DESCRIPTION_MAX_LENGTH + " символов")
     private String description;
-    private LocalDate releaseDate;
     @Positive(message = "Продолжительность не может быть отрицательной")
     private Long duration;
     @NotNull(message = "Рейтинг не может быть Null")
     private Mpa mpa;
     @NotNull(message = "Поле ЖАНРЫ не может быть Null")
     private Set<Genre> genres = new HashSet<>();
+    private Set<Director> directors;
 }
