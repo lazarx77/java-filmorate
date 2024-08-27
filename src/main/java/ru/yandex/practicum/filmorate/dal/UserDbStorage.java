@@ -35,7 +35,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String DELETE_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? AND FRIEND_ID = ?";
     private static final String DELETE_USER_QUERY = "DELETE FROM USERS WHERE USER_ID = ?";
     private static final String DELETE_USER_FRIEND_QUERY = "DELETE FROM FRIENDSHIP WHERE USER_ID = ? OR FRIEND_ID = ?";
-    private static final String DELETE_USER_LIKE_QUERY = "DELETE FROM LIKES WHERE USER_ID = ?";
+    private static final String DELETE_USER_LIKE_QUERY = "DELETE FROM RATINGS WHERE USER_ID = ?";
     private static final String DELETE_USER_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE USER_ID = ?";
 
     /**

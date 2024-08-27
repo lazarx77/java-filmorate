@@ -28,7 +28,7 @@ import java.util.Set;
 public class Film {
 
     private static final int DESCRIPTION_MAX_LENGTH = 200;
-    private Set<Long> likes = new HashSet<>();
+
     private Long id;
     @NotBlank(message = "Название не может быть пустым")
     private String name;
@@ -38,8 +38,10 @@ public class Film {
     private String description;
     @Positive(message = "Продолжительность не может быть отрицательной")
     private Long duration;
+    private Double filmRating;
     @NotNull(message = "Рейтинг не может быть Null")
     private Mpa mpa;
+    private Set<Long> usersRatedFilm = new HashSet<>();
     @NotNull(message = "Поле ЖАНРЫ не может быть Null")
     private Set<Genre> genres = new HashSet<>();
     private Set<Director> directors;

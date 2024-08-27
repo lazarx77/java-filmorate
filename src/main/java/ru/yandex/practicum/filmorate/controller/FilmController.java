@@ -3,7 +3,16 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmDbService;
 
@@ -29,8 +38,10 @@ public class FilmController {
      * @param userId идентификатор пользователя
      */
     @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable("id") long id, @PathVariable("userId") long userId) {
-        filmDbService.addLike(id, userId);
+    public void addRating(@PathVariable("id") long id,
+                          @PathVariable("userId") long userId,
+                          @RequestParam(required = false) Integer userRating) {
+        filmDbService.addRating(id, userId, userRating);
     }
 
     /**
@@ -40,8 +51,8 @@ public class FilmController {
      * @param userId идентификатор пользователя
      */
     @DeleteMapping("/{id}/like/{userId}")
-    public void deleteLike(@PathVariable("id") long id, @PathVariable("userId") long userId) {
-        filmDbService.deleteLike(id, userId);
+    public void deleteRating(@PathVariable("id") long id, @PathVariable("userId") long userId) {
+        filmDbService.deleteRating(id, userId);
     }
 
     /**

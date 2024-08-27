@@ -13,10 +13,20 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.*;
+import ru.yandex.practicum.filmorate.service.DirectorDbService;
+import ru.yandex.practicum.filmorate.service.DirectorDbValidatorService;
+import ru.yandex.practicum.filmorate.service.GenreDbService;
+import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
+import ru.yandex.practicum.filmorate.service.MpaDbService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -34,22 +44,27 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             " WHERE FILM_ID = ?";
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
-    private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM LIKES WHERE FILM_ID = ?";
+    private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM RATINGS WHERE FILM_ID = ?";
+    //private static final String CALCULATE_RATING_FOR_FILM_ID = "SELECT AVG(USER_RATING) FROM LIKES WHERE FILM_ID = ?";
+    private static final String UPDATE_FILM_RATING_QUERY = """
+            UPDATE FILMS SET FILM_RATING = (SELECT ROUND(AVG(USER_RATING),1) FROM RATINGS WHERE FILM_ID = ?)
+            WHERE FILM_ID = ?
+            """;
     private static final String INSERT_FILM_QUERY = "INSERT INTO FILMS(FILM_NAME, RELEASE_DATE, DURATION, " +
-            "DESCRIPTION, MPA_ID) VALUES (?,?,?,?,?)";
-    private static final String INSERT_LIKE_QUERY = "INSERT INTO LIKES(FILM_ID, USER_ID) VALUES (?,?)";
+            "DESCRIPTION, MPA_ID, FILM_RATING) VALUES (?,?,?,?,?,?)";
+    private static final String INSERT_LIKE_QUERY = "INSERT INTO RATINGS(FILM_ID, USER_ID, USER_RATING) VALUES (?,?,?)";
     private static final String INSERT_FILM_GENRE_QUERY = "INSERT INTO FILMS_GENRES(FILM_ID, GENRE_ID) VALUES (?,?)";
     private static final String INSERT_FILM_DIRECTOR_QUERY = "INSERT INTO FILMS_DIRECTORS(FILM_ID, DIRECTOR_ID)" +
             " VALUES (?,?)";
     private static final String UPDATE_QUERY = "UPDATE FILMS SET FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, " +
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
-    private static final String DELETE_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
-    private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM LIKES WHERE FILM_ID =? AND USER_ID =?";
+    private static final String DELETE_LIKE_QUERY = "DELETE FROM RATINGS WHERE FILM_ID = ? AND USER_ID = ?";
+    private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM RATINGS WHERE FILM_ID =? AND USER_ID =?";
     private static final String COMMON_FILMS_QUERY = "    " +
             "    WITH USER_films AS (\n" +
             "                        SELECT f.film_id,\n" +
             "                               count(*) AS cnt\n" +
-            "                          FROM LIKES l\n" +
+            "                          FROM RATINGS l\n" +
             "                         INNER JOIN films f\n" +
             "                            ON f.film_id = l.film_id\n" +
             "                         WHERE l.user_id = ?\n" +
@@ -58,7 +73,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "       friend_films AS (\n" +
             "                        SELECT f.film_id,\n" +
             "                               count(*) AS cnt\n" +
-            "                          FROM LIKES l\n" +
+            "                          FROM RATINGS l\n" +
             "                         INNER JOIN films f\n" +
             "                            ON f.film_id = l.film_id\n" +
             "                         WHERE l.user_id = ?\n" +
@@ -71,29 +86,50 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "                 INNER JOIN friend_films ff \n" +
             "                    ON ff.film_id = f.FILM_ID \n" +
             "                 ORDER BY u.cnt desc";
+    //    private static final String COMMON_FILMS_QUERY = """
+//            WITH USER_films AS (
+//                SELECT f.film_id, count(*) AS cnt
+//                FROM LIKES l
+//                INNER JOIN films f ON f.film_id = l.film_id
+//                WHERE l.user_id = ?
+//                GROUP BY f.film_id
+//            ),
+//            friend_films AS (
+//                SELECT f.film_id, count(*) AS cnt
+//                FROM LIKES l
+//                INNER JOIN films f ON f.film_id = l.film_id
+//                WHERE l.user_id = ?
+//                GROUP BY f.film_id
+//            )
+//            SELECT f.*
+//            FROM films f
+//            INNER JOIN USER_films u ON f.FILM_ID = u.film_id
+//            INNER JOIN friend_films ff ON ff.film_id = f.FILM_ID
+//            ORDER BY u.cnt DESC
+//            """;
     private static final String DELETE_FILM_QUERY = "DELETE FROM FILMS WHERE FILM_ID = ?";
     private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
-    private static final String DELETE_FILM_LIKE_QUERY = "DELETE FROM LIKES WHERE FILM_ID = ?";
+    private static final String DELETE_FILM_LIKE_QUERY = "DELETE FROM RATINGS WHERE FILM_ID = ?";
     private static final String DELETE_FILM_REVIEW_QUERY = "DELETE FROM REVIEWS WHERE FILM_ID = ?";
     private static final String GET_USER_LIKES_QUERY = """
             WITH prep AS (
-                SELECT l1.USER_ID,
-                       COUNT(*) AS cnt
-                  FROM likes l1
-                 INNER JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+                SELECT l1.USER_ID, COUNT(*) AS cnt
+                FROM RATINGS l1
+                INNER JOIN RATINGS l2 ON l2.FILM_ID = l1.FILM_ID
                                     AND l2.USER_ID = ?
-                 WHERE l1.USER_ID != ?
-                 GROUP BY l1.USER_ID
-                 ORDER BY COUNT(*) DESC
+                WHERE l1.USER_ID != ?
+                GROUP BY l1.USER_ID
+                ORDER BY COUNT(*) DESC
             )
             SELECT f.*
-              FROM LIKES l1
-             INNER JOIN prep p ON p.USER_ID = l1.USER_ID
-             LEFT JOIN likes l2 ON l2.FILM_ID = l1.FILM_ID
+            FROM RATINGS l1
+            INNER JOIN prep p ON p.USER_ID = l1.USER_ID
+            LEFT JOIN RATINGS l2 ON l2.FILM_ID = l1.FILM_ID
                                AND l2.USER_ID = ?
-             INNER JOIN films f ON f.FILM_ID = l1.FILM_ID
-             WHERE l2.FILM_ID IS NULL
-             ORDER BY p.cnt DESC""";
+            INNER JOIN films f ON f.FILM_ID = l1.FILM_ID
+            WHERE l2.FILM_ID IS NULL
+            ORDER BY p.cnt DESC
+            """;
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final RowMapper<Director> directorMapper = new DirectorRowMapper();
@@ -127,7 +163,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public Collection<Film> getAll() {
         List<Film> films = findMany(FIND_ALL_FILMS_QUERY);
         for (Film film : films) {
-            film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
+            film.setUsersRatedFilm(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
             List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());
@@ -139,6 +175,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         return films;
     }
 
+    public void updateUserRating(Long filmId) {
+        log.info("Updating rating Film ID = {}", filmId);
+        //Double userRating = Math.round(findOneEntity(FIND_LIKES_BY_FILM_ID, filmId).orElse(0.0) * 10) / 10.0;
+        update(UPDATE_FILM_RATING_QUERY, filmId, filmId);
+        log.info("Updated rating Film ID = {}", filmId);
+    }
+
     /**
      * Добавляет новый фильм в базу данных.
      *
@@ -147,8 +190,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      */
     @Override
     public Film addFilm(Film film) {
+        film.setFilmRating(0.0);
         long id = insertWithGenId(INSERT_FILM_QUERY, film.getName(), film.getReleaseDate(), film.getDuration(),
-                film.getDescription(), film.getMpa().getId());
+                film.getDescription(), film.getMpa().getId(), film.getFilmRating());
         Set<Genre> genres = film.getGenres();
         Set<Genre> sortedGenres = new HashSet<>();
         if (genres != null && !genres.isEmpty()) {
@@ -177,9 +221,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         film.setId(id);
-        film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
+        film.setUsersRatedFilm(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.setGenres(sortedGenres);
-
         return film;
     }
 
@@ -222,6 +265,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 UPDATE_QUERY, updatedFilm.getName(), updatedFilm.getDescription(), updatedFilm.getReleaseDate(),
                 updatedFilm.getDuration(), updatedFilm.getMpa().getId(), updatedFilm.getId()
         );
+        updatedFilm.setUsersRatedFilm(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID,
+                Long.class,
+                updatedFilm.getId())));
         log.info("Данные фильма с названием: {} обновлены.", updatedFilm.getName());
         return getFilmById(updatedFilm.getId());
     }
@@ -250,7 +296,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         for (Genre genre : genres) {
             genre.setName(genreDbService.findGenreNameById(genre.getId()));
         }
-        film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         film.getMpa().setName(mpaDbService.findMpaNameById(film.getMpa().getId()));
         Set<Director> directors = new HashSet<>(directorDbService.findDirectorsByFilmId(id));
         for (Director director : directors) {
@@ -258,6 +303,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
         film.setDirectors(directors);
         film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(id)));
+        film.setUsersRatedFilm(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
         return film;
     }
 
@@ -268,8 +314,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      * @param userId Идентификатор пользователя, который ставит лайк.
      * @throws NotFoundException Если фильм или пользователь не найдены.
      */
-    public void addLike(Long filmId, Long userId) {
-        insert(INSERT_LIKE_QUERY, filmId, userId);
+    public void addRating(Long filmId, Long userId, Integer userRating) {
+        insert(INSERT_LIKE_QUERY, filmId, userId, userRating);
+        updateUserRating(filmId);
     }
 
     /**
@@ -279,11 +326,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
      * @param userId Идентификатор пользователя, который удаляет лайк.
      * @throws NotFoundException Если фильма нет лайка от пользователя.
      */
-    public void deleteLike(Long filmId, Long userId) {
+    public void deleteRating(Long filmId, Long userId) {
         if (findManyInstances(COUNT_LIKES_QUERY, Long.class, filmId, userId).getFirst() == 0) {
             throw new NotFoundException("У фильма с id " + filmId + " нет лайка от пользователя с id " + userId);
         }
         deleteByTwoIds(DELETE_LIKE_QUERY, filmId, userId);
+        updateUserRating(filmId);
     }
 
     public List<Film> getCommonFilms(long userId, long friendId) {
@@ -305,7 +353,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public List<Film> getRecommendations(long id) {
         List<Film> films = findMany(GET_USER_LIKES_QUERY, id, id, id);
         for (Film film : films) {
-            film.setLikes(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, film.getId())));
+            film.setUsersRatedFilm(new HashSet<>(findManyInstances(FIND_LIKES_BY_FILM_ID, Long.class, id)));
             film.setMpa(mpaDbService.findById(film.getMpa().getId()));
             film.setGenres(new HashSet<>(genreDbService.findGenresByFilmId(film.getId())));
             List<Director> directors = directorDbService.findDirectorsByFilmId(film.getId());

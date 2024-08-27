@@ -111,14 +111,14 @@ public class FilmDbService {
      * @param userId Идентификатор пользователя, который ставит лайк.
      * @throws NotFoundException Если фильм или пользователь не найдены.
      */
-    public void addLike(Long filmId, Long userId) {
+    public void addRating(Long filmId, Long userId, Integer userRating) {
         log.info("Проверка существования пользователя с Id {} при добавлении like.", userId);
         userDbService.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         log.info("Проверка существования фильма с Id {} при добавлении like.", filmId);
         findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
-        filmDbStorage.addLike(filmId, userId);
+        filmDbStorage.addRating(filmId, userId, userRating);
         log.info("Фильму с id {} добавлен like пользователя с id {}.", filmId, userId);
         saveHistory(filmId, userId, OperationTypes.ADD);
     }
@@ -130,11 +130,11 @@ public class FilmDbService {
      * @param userId Идентификатор пользователя, который удаляет лайк.
      * @throws NotFoundException Если фильм или пользователь не найдены.
      */
-    public void deleteLike(Long filmId, Long userId) {
+    public void deleteRating(Long filmId, Long userId) {
         log.info("Проверка существования фильма и пользователя: {} и {}", filmId, userId);
         findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         userDbService.findById(userId);
-        filmDbStorage.deleteLike(filmId, userId);
+        filmDbStorage.deleteRating(filmId, userId);
         log.info("У фильма с id {} удален like пользователя id {}.", filmId, userId);
         saveHistory(filmId, userId, OperationTypes.REMOVE);
     }
@@ -150,7 +150,7 @@ public class FilmDbService {
         return getAll()
                 .stream()
                 //.filter(film -> !film.getLikes().isEmpty())
-                .sorted((film1, film2) -> Integer.compare(film2.getLikes().size(), film1.getLikes().size()))
+                .sorted((film1, film2) -> Integer.compare(film2.getUsersRatedFilm().size(), film1.getUsersRatedFilm().size()))
                 .filter(film -> genreId == null || film.getGenres().contains(genreDbService.findById(genreId)))
                 .filter(film -> year == null || film.getReleaseDate().getYear() == year)
                 .limit(optionalCount.orElse(Integer.MAX_VALUE))
@@ -171,7 +171,7 @@ public class FilmDbService {
      * @return Список общих фильмов между указанным пользователем и его другом, отсортированный по количеству лайков.
      */
     public List<Film> getCommonFilms(long userId, long friendId) {
-        Comparator<Film> comparator = Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+        Comparator<Film> comparator = Comparator.comparing(film -> film.getUsersRatedFilm().size(), Comparator.reverseOrder());
         return filmDbStorage.getCommonFilms(userId, friendId)
                 .stream()
                 .sorted(comparator)
@@ -213,7 +213,7 @@ public class FilmDbService {
         directorDbService.findById(id);
         Comparator<Film> comparator = switch (sortBy) {
             case "year" -> Comparator.comparing(Film::getReleaseDate);
-            case "likes" -> Comparator.comparing(film -> film.getLikes().size(), Comparator.reverseOrder());
+            case "likes" -> Comparator.comparing(film -> film.getUsersRatedFilm().size(), Comparator.reverseOrder());
             default -> throw new IllegalArgumentException("Неправильное значение sortBy: " + sortBy);
         };
 

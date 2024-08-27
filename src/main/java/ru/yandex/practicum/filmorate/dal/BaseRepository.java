@@ -41,6 +41,15 @@ public class BaseRepository<T> {
         }
     }
 
+    protected Optional<Double> findOneEntity(String query, Object... params) {
+        try {
+            Double result = jdbc.queryForObject(query, new SingleColumnRowMapper<>(Double.class), params);
+            return Optional.ofNullable(result);
+        } catch (EmptyResultDataAccessException ignored) {
+            return Optional.empty();
+        }
+    }
+
     /**
      * Находит одно значение одного столбца по заданному SQL-запросу.
      *
