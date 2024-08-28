@@ -45,7 +45,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM FILMS";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM FILMS WHERE FILM_ID = ?";
     private static final String FIND_LIKES_BY_FILM_ID = "SELECT USER_ID FROM RATINGS WHERE FILM_ID = ?";
-    //private static final String CALCULATE_RATING_FOR_FILM_ID = "SELECT AVG(USER_RATING) FROM LIKES WHERE FILM_ID = ?";
     private static final String UPDATE_FILM_RATING_QUERY = """
             UPDATE FILMS SET FILM_RATING = (SELECT ROUND(AVG(USER_RATING),1) FROM RATINGS WHERE FILM_ID = ?)
             WHERE FILM_ID = ?
@@ -60,53 +59,27 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             "DURATION = ?, MPA_ID = ? WHERE FILM_ID = ?";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM RATINGS WHERE FILM_ID = ? AND USER_ID = ?";
     private static final String COUNT_LIKES_QUERY = "SELECT COUNT(*) FROM RATINGS WHERE FILM_ID =? AND USER_ID =?";
-    private static final String COMMON_FILMS_QUERY = "    " +
-            "    WITH USER_films AS (\n" +
-            "                        SELECT f.film_id,\n" +
-            "                               count(*) AS cnt\n" +
-            "                          FROM RATINGS l\n" +
-            "                         INNER JOIN films f\n" +
-            "                            ON f.film_id = l.film_id\n" +
-            "                         WHERE l.user_id = ?\n" +
-            "                         GROUP BY f.film_id\n" +
-            "                        ),\n" +
-            "       friend_films AS (\n" +
-            "                        SELECT f.film_id,\n" +
-            "                               count(*) AS cnt\n" +
-            "                          FROM RATINGS l\n" +
-            "                         INNER JOIN films f\n" +
-            "                            ON f.film_id = l.film_id\n" +
-            "                         WHERE l.user_id = ?\n" +
-            "                         GROUP BY f.film_id\n" +
-            "                       )\n" +
-            "                SELECT f.*\n" +
-            "                  FROM films f\n" +
-            "                 INNER JOIN USER_films u \n" +
-            "                    ON f.FILM_ID = u.film_id\n" +
-            "                 INNER JOIN friend_films ff \n" +
-            "                    ON ff.film_id = f.FILM_ID \n" +
-            "                 ORDER BY u.cnt desc";
-    //    private static final String COMMON_FILMS_QUERY = """
-//            WITH USER_films AS (
-//                SELECT f.film_id, count(*) AS cnt
-//                FROM LIKES l
-//                INNER JOIN films f ON f.film_id = l.film_id
-//                WHERE l.user_id = ?
-//                GROUP BY f.film_id
-//            ),
-//            friend_films AS (
-//                SELECT f.film_id, count(*) AS cnt
-//                FROM LIKES l
-//                INNER JOIN films f ON f.film_id = l.film_id
-//                WHERE l.user_id = ?
-//                GROUP BY f.film_id
-//            )
-//            SELECT f.*
-//            FROM films f
-//            INNER JOIN USER_films u ON f.FILM_ID = u.film_id
-//            INNER JOIN friend_films ff ON ff.film_id = f.FILM_ID
-//            ORDER BY u.cnt DESC
-//            """;
+    private static final String COMMON_FILMS_QUERY = """
+            WITH USER_films AS (
+                SELECT f.film_id, count(*) AS cnt
+                FROM RATINGS l
+                INNER JOIN films f ON f.film_id = l.film_id
+                WHERE l.user_id = ?
+                GROUP BY f.film_id
+            ),
+            friend_films AS (
+                SELECT f.film_id, count(*) AS cnt
+                FROM RATINGS l
+                INNER JOIN films f ON f.film_id = l.film_id
+                WHERE l.user_id = ?
+                GROUP BY f.film_id
+            )
+            SELECT f.*
+            FROM films f
+            INNER JOIN USER_films u ON f.FILM_ID = u.film_id
+            INNER JOIN friend_films ff ON ff.film_id = f.FILM_ID
+            ORDER BY u.cnt DESC
+            """;
     private static final String DELETE_FILM_QUERY = "DELETE FROM FILMS WHERE FILM_ID = ?";
     private static final String DELETE_FILM_GENRE_QUERY = "DELETE FROM FILMS_GENRES WHERE FILM_ID = ?";
     private static final String DELETE_FILM_LIKE_QUERY = "DELETE FROM RATINGS WHERE FILM_ID = ?";
@@ -116,7 +89,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 SELECT l1.USER_ID, COUNT(*) AS cnt
                 FROM RATINGS l1
                 INNER JOIN RATINGS l2 ON l2.FILM_ID = l1.FILM_ID
-                                    AND l2.USER_ID = ?
+                                      AND l2.USER_ID = ?
+                                      AND ABS(l1.USER_RATING - l2.USER_RATING) <= 1
                 WHERE l1.USER_ID != ?
                 GROUP BY l1.USER_ID
                 ORDER BY COUNT(*) DESC
@@ -125,9 +99,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             FROM RATINGS l1
             INNER JOIN prep p ON p.USER_ID = l1.USER_ID
             LEFT JOIN RATINGS l2 ON l2.FILM_ID = l1.FILM_ID
-                               AND l2.USER_ID = ?
+                                 AND l2.USER_ID = ?
             INNER JOIN films f ON f.FILM_ID = l1.FILM_ID
             WHERE l2.FILM_ID IS NULL
+                  AND f.FILM_RATING >= 4
             ORDER BY p.cnt DESC
             """;
     //    private static final String GET_USER_LIKES_QUERY = """
@@ -201,7 +176,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     public void updateUserRating(Long filmId) {
         log.info("Updating rating Film ID = {}", filmId);
-        //Double userRating = Math.round(findOneEntity(FIND_LIKES_BY_FILM_ID, filmId).orElse(0.0) * 10) / 10.0;
         update(UPDATE_FILM_RATING_QUERY, filmId, filmId);
         log.info("Updated rating Film ID = {}", filmId);
     }

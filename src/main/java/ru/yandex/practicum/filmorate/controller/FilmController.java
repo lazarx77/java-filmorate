@@ -40,7 +40,7 @@ public class FilmController {
     @PutMapping("/{id}/like/{userId}")
     public void addRating(@PathVariable("id") long id,
                           @PathVariable("userId") long userId,
-                          @RequestParam(required = false) Integer userRating) {
+                          @RequestParam Integer userRating) {
         filmDbService.addRating(id, userId, userRating);
     }
 

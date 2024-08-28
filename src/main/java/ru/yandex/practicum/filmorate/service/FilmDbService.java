@@ -75,7 +75,7 @@ public class FilmDbService {
         if (filmDbStorage.findById(updatedFilm.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id " + updatedFilm.getId() + " не найден");
         }
-        ;
+
         log.info("Проверка даты выпуска фильма при обновлении: {}.", updatedFilm.getName());
         FieldsValidatorService.validateReleaseDate(updatedFilm);
         log.info("Проверка полей фильма при обновлении: {}.", updatedFilm.getName());
