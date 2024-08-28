@@ -149,7 +149,6 @@ public class FilmDbService {
         Optional<Integer> optionalCount = Optional.ofNullable(count);
         return getAll()
                 .stream()
-                //.filter(film -> !film.getLikes().isEmpty())
                 .sorted((film1, film2) -> Double.compare(film2.getFilmRating(), film1.getFilmRating()))
                 .filter(film -> genreId == null || film.getGenres().contains(genreDbService.findById(genreId)))
                 .filter(film -> year == null || film.getReleaseDate().getYear() == year)
@@ -171,7 +170,8 @@ public class FilmDbService {
      * @return Список общих фильмов между указанным пользователем и его другом, отсортированный по количеству лайков.
      */
     public List<Film> getCommonFilms(long userId, long friendId) {
-        Comparator<Film> comparator = Comparator.comparing(film -> film.getUsersRatedFilm().size(), Comparator.reverseOrder());
+        Comparator<Film> comparator = Comparator.comparing(film -> film
+                .getUsersRatedFilm().size(), Comparator.reverseOrder());
         return filmDbStorage.getCommonFilms(userId, friendId)
                 .stream()
                 .sorted(comparator)

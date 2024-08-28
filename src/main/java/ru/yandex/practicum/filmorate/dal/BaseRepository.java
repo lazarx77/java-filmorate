@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dal;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -41,6 +42,32 @@ public class BaseRepository<T> {
         }
     }
 
+    /**
+     * Находит одно значение типа {@code Double} в базе данных, выполняя заданный SQL-запрос.
+     *
+     * <p>Метод использует {@link JdbcTemplate} для выполнения запроса и возвращает результат в виде
+     * {@link Optional}. Если запрос не возвращает ни одной строки, метод возвращает {@link Optional#empty()}.
+     *
+     * <p>Пример использования:
+     * <pre>
+     * Optional<Double> value = findOneEntity("SELECT price FROM products WHERE id = ?", productId);
+     * value.ifPresent(price -> System.out.println("Цена продукта: " + price));
+     * </pre>
+     *
+     * @param query SQL-запрос, который будет выполнен. Запрос должен возвращать одно значение типа {@code Double}.
+     * @param params Параметры, которые будут подставлены в запрос. Параметры должны соответствовать
+     *               местам в запросе, обозначенным знаками вопроса (?).
+     * @return {@link Optional} содержащий найденное значение типа {@code Double}, или {@link Optional#empty()}
+     *         если значение не найдено.
+     * @throws DataAccessException если возникает ошибка доступа к данным при выполнении запроса.
+     *
+     * <p>Метод обрабатывает {@link EmptyResultDataAccessException}, которая выбрасывается, если запрос не
+     * возвращает ни одной строки, и возвращает пустой {@link Optional} в этом случае.
+     *
+     * <p>Важно отметить, что метод возвращает только одно значение. Если запрос возвращает более одной строки,
+     * это приведет к исключению. Для получения нескольких значений следует использовать другие методы,
+     * такие как {@code queryForList} или {@code query}.
+     */
     protected Optional<Double> findOneEntity(String query, Object... params) {
         try {
             Double result = jdbc.queryForObject(query, new SingleColumnRowMapper<>(Double.class), params);

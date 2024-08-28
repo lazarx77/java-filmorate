@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dal;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -185,6 +186,22 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Удаляет пользователя и все связанные с ним данные из базы данных.
+     *
+     * <p>Метод выполняет последовательные удаления: сначала удаляются отзывы пользователя,
+     * затем лайки, связи с друзьями и, наконец, сам пользователь. Это гарантирует, что все
+     * связанные данные будут корректно удалены, предотвращая возможные нарушения целостности данных.
+     *
+     * <p>Пример использования:
+     * <pre>
+     * deleteUser(userId);
+     * </pre>
+     *
+     * @param userId Идентификатор пользователя, которого необходимо удалить.
+     *               Должен быть не {@code null} и соответствовать существующему пользователю в базе данных.
+     *
+     */
     public void deleteUser(long userId) {
         delete(DELETE_USER_REVIEW_QUERY, userId);
         delete(DELETE_USER_LIKE_QUERY, userId);

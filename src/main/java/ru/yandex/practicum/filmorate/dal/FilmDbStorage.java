@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dal;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -13,20 +14,10 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.service.DirectorDbService;
-import ru.yandex.practicum.filmorate.service.DirectorDbValidatorService;
-import ru.yandex.practicum.filmorate.service.GenreDbService;
-import ru.yandex.practicum.filmorate.service.GenreFieldsDbValidator;
-import ru.yandex.practicum.filmorate.service.MpaDbService;
+import ru.yandex.practicum.filmorate.service.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -150,6 +141,26 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         return films;
     }
 
+    /**
+     * Обновляет рейтинг фильма в базе данных по заданному идентификатору фильма.
+     *
+     * <p>Метод выполняет обновление рейтинга фильма, используя заранее определенный SQL-запрос
+     * {@code UPDATE_FILM_RATING_QUERY}. В процессе выполнения метода логируются сообщения
+     * о начале и завершении обновления рейтинга.
+     *
+     * <p>Пример использования:
+     * <pre>
+     * updateUserRating(123L);
+     * </pre>
+     *
+     * @param filmId Идентификатор фильма, рейтинг которого необходимо обновить.
+     *               Должен быть не {@code null} и соответствовать существующему фильму в базе данных.
+     * @throws DataAccessException если возникает ошибка доступа к данным при выполнении обновления.
+     *
+     *                             <p>Метод логирует информацию о процессе обновления, что позволяет отслеживать
+     *                             изменения рейтинга фильмов в системе. Логирование осуществляется с использованием
+     *                             библиотеки логирования, и сообщения содержат идентификатор фильма.
+     */
     public void updateUserRating(Long filmId) {
         log.info("Updating rating Film ID = {}", filmId);
         update(UPDATE_FILM_RATING_QUERY, filmId, filmId);
@@ -308,6 +319,23 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         updateUserRating(filmId);
     }
 
+    /**
+     * Получает список фильмов, которые являются общими для двух пользователей.
+     *
+     * <p>Метод выполняет запрос к базе данных для получения фильмов, которые оба пользователя
+     * (пользователь с идентификатором {@code userId} и его друг с идентификатором {@code friendId})
+     * оценили. Для каждого найденного фильма также загружаются его жанры и название MPA (Motion Picture Association).
+     *
+     * <p>Пример использования:
+     * <pre>
+     * List<Film> commonFilms = getCommonFilms(userId, friendId);
+     * </pre>
+     *
+     * @param userId   Идентификатор пользователя, для которого ищутся общие фильмы.
+     * @param friendId Идентификатор друга, с которым сравниваются фильмы.
+     * @return Список фильмов, которые являются общими для указанного пользователя и его друга.
+     * @throws DataAccessException если возникает ошибка доступа к данным при выполнении запроса.
+     */
     public List<Film> getCommonFilms(long userId, long friendId) {
         List<Film> result = super.findMany(COMMON_FILMS_QUERY, userId, friendId);
         for (Film film : result) {
@@ -317,6 +345,22 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         return result;
     }
 
+    /**
+     * Удаляет фильм и все связанные с ним данные из базы данных.
+     *
+     * <p>Метод выполняет последовательные удаления: сначала удаляются отзывы о фильме,
+     * затем лайки, жанры и, наконец, сам фильм. Это гарантирует, что все связанные
+     * данные будут корректно удалены.
+     *
+     * <p>Пример использования:
+     * <pre>
+     * deleteFilm(filmId);
+     * </pre>
+     *
+     * @param filmId Идентификатор фильма, который необходимо удалить.
+     *               Должен быть не {@code null} и соответствовать существующему фильму в базе данных.
+     * @throws DataAccessException если возникает ошибка доступа к данным при выполнении удаления.
+     */
     public void deleteFilm(long filmId) {
         delete(DELETE_FILM_REVIEW_QUERY, filmId);
         delete(DELETE_FILM_LIKE_QUERY, filmId);
@@ -324,6 +368,23 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         delete(DELETE_FILM_QUERY, filmId);
     }
 
+    /**
+     * Получает рекомендации фильмов для пользователя на основе его оценок.
+     *
+     * <p>Метод извлекает список фильмов, которые пользователь оценил, и для каждого
+     * фильма загружает информацию о пользователях, которые также оценили этот фильм,
+     * его жанрах, MPA и режиссерах. Это позволяет создать более персонализированные
+     * рекомендации для пользователя.
+     *
+     * <p>Пример использования:
+     * <pre>
+     * List<Film> recommendations = getRecommendations(userId);
+     * </pre>
+     *
+     * @param id Идентификатор пользователя, для которого необходимо получить рекомендации.
+     * @return Список рекомендованных фильмов на основе оценок пользователя.
+     * @throws DataAccessException если возникает ошибка доступа к данным при выполнении запроса.
+     */
     public List<Film> getRecommendations(long id) {
         List<Film> films = findMany(GET_USER_LIKES_QUERY, id, id, id);
         for (Film film : films) {
