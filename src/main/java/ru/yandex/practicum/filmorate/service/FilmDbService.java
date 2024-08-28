@@ -150,7 +150,7 @@ public class FilmDbService {
         return getAll()
                 .stream()
                 //.filter(film -> !film.getLikes().isEmpty())
-                .sorted((film1, film2) -> Integer.compare(film2.getUsersRatedFilm().size(), film1.getUsersRatedFilm().size()))
+                .sorted((film1, film2) -> Double.compare(film2.getFilmRating(), film1.getFilmRating()))
                 .filter(film -> genreId == null || film.getGenres().contains(genreDbService.findById(genreId)))
                 .filter(film -> year == null || film.getReleaseDate().getYear() == year)
                 .limit(optionalCount.orElse(Integer.MAX_VALUE))
@@ -213,7 +213,7 @@ public class FilmDbService {
         directorDbService.findById(id);
         Comparator<Film> comparator = switch (sortBy) {
             case "year" -> Comparator.comparing(Film::getReleaseDate);
-            case "likes" -> Comparator.comparing(film -> film.getUsersRatedFilm().size(), Comparator.reverseOrder());
+            case "likes" -> Comparator.comparing(Film::getFilmRating, Comparator.reverseOrder());
             default -> throw new IllegalArgumentException("Неправильное значение sortBy: " + sortBy);
         };
 

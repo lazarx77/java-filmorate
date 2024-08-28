@@ -130,6 +130,30 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             WHERE l2.FILM_ID IS NULL
             ORDER BY p.cnt DESC
             """;
+    //    private static final String GET_USER_LIKES_QUERY = """
+//            WITH similar_users AS (
+//                SELECT l1.USER_ID, COUNT(*) AS cnt
+//                FROM RATINGS l1
+//                INNER JOIN RATINGS l2 ON l2.FILM_ID = l1.FILM_ID
+//                                     AND l2.USER_ID = ?
+//                                     AND ABS(l1.RATING - l2.RATING) <= 1
+//                WHERE l1.USER_ID != ?
+//                GROUP BY l1.USER_ID
+//                ORDER BY COUNT(*) DESC
+//            ),
+//            recommended_films AS (
+//                SELECT f.*
+//                FROM RATINGS l1
+//                INNER JOIN similar_users su ON su.USER_ID = l1.USER_ID
+//                LEFT JOIN RATINGS l2 ON l2.FILM_ID = l1.FILM_ID
+//                                    AND l2.USER_ID = ?
+//                INNER JOIN FILMS f ON f.FILM_ID = l1.FILM_ID
+//                WHERE l2.FILM_ID IS NULL
+//                  AND l1.RATING >= 4 -- Только положительные оценки
+//                ORDER BY su.cnt DESC
+//            )
+//            SELECT * FROM recommended_films;
+//            """;
     private final RowMapper<Mpa> mpaMapper = new MpaRowMapper();
     private final RowMapper<Genre> genreMapper = new GenreRowMapper();
     private final RowMapper<Director> directorMapper = new DirectorRowMapper();
